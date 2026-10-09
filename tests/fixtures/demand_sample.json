@@ -1,0 +1,59 @@
+{
+  "_comment": "需要推計の手計算サンプル（バス停3つ・メッシュ2つ）。計算過程は docs/demand_sample.md。係数は計算を確かめるための架空の値で、調査の値ではない。",
+  "fiscalYears": [2027, 2028],
+  "meshes": {
+    "M1": {
+      "code": "533946111",
+      "pop": { "2025": [100, 600, 150, 150], "2030": [90, 560, 150, 200] }
+    },
+    "M2": {
+      "code": "533946112",
+      "pop": { "2025": [200, 1200, 300, 300], "2030": [180, 1100, 300, 420] }
+    }
+  },
+  "stops": [
+    { "id": "A", "name": "M1の中心", "lng": 139.765625, "lat": 35.67708333333333, "radiusM": 100 },
+    { "id": "B", "name": "M2の中心", "lng": 139.771875, "lat": 35.67708333333333, "radiusM": 100 },
+    {
+      "id": "C",
+      "name": "M1とM2の境界",
+      "lng": 139.76875,
+      "lat": 35.67708333333333,
+      "radiusM": 100
+    }
+  ],
+  "coefficients": {
+    "weekday": {
+      "0-14": { "outingRate": 0.9, "tripRate": 2.5, "busShare": 0.02 },
+      "15-64": { "outingRate": 0.8, "tripRate": 2.5, "busShare": 0.03 },
+      "65-74": { "outingRate": 0.7, "tripRate": 2.6, "busShare": 0.04 },
+      "75+": { "outingRate": 0.6, "tripRate": 2.4, "busShare": 0.08 }
+    },
+    "holiday": {
+      "0-14": { "outingRate": 0.6, "tripRate": 2.0, "busShare": 0.02 },
+      "15-64": { "outingRate": 0.6, "tripRate": 2.2, "busShare": 0.02 },
+      "65-74": { "outingRate": 0.5, "tripRate": 2.2, "busShare": 0.03 },
+      "75+": { "outingRate": 0.4, "tripRate": 2.0, "busShare": 0.06 }
+    }
+  },
+  "days": { "weekday": 245, "holiday": 120 },
+  "expected": {
+    "meshAreaM2": 261556.42,
+    "circleShareOfMesh": 0.1201115,
+    "2027": {
+      "stopPop": {
+        "A": [11.5307, 70.1451, 18.0167, 20.4189],
+        "B": [23.0614, 139.3293, 36.0334, 41.7988],
+        "C": [17.2961, 104.7372, 27.0251, 31.1089]
+      },
+      "dailyWeekday": 37.8412,
+      "dailyHoliday": 16.6957,
+      "annual": 11274.57
+    },
+    "2028": {
+      "dailyWeekday": 38.1955,
+      "dailyHoliday": 16.8306,
+      "annual": 11377.57
+    }
+  }
+}
