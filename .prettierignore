@@ -11,3 +11,8 @@ public/data/busstops
 public/data/busroutes
 public/data/municipalities
 public/data/roads
+public/data/prefectures.json
+public/data/attributions.json
+public/data/holidays.json
+public/data/coefficients.json
+src/routing/__fixtures__
