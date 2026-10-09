@@ -35,3 +35,4 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 .idea/
+data_build/_capacity_inputs.json

@@ -1,0 +1,89 @@
+{
+  "_comment": "車両プリセット（参考値）。要件定義書 F-3A の表の4車種＋カスタム。出典にない項目は null（画面では「要入力」）。値ごとに出典を持つ。実際の値は案件ごとにメーカー・運行事業者に確認すること。",
+  "checkedAt": "2026-10-09",
+  "items": [
+    {
+      "presetId": "navya-arma",
+      "name": "NAVYA ARMA",
+      "capacity": 11,
+      "seats": null,
+      "standingAllowed": null,
+      "operatorOnBoard": null,
+      "operatorCount": null,
+      "maxSpeedKmh": null,
+      "avgSpeedKmh": null,
+      "rangeKm": null,
+      "chargeHours": null,
+      "wheelchair": null,
+      "autonomyLevel": null,
+      "sources": {
+        "capacity": "要件定義書 v0.5 F-3A「私道15人／公道11人」（出典：ソフトバンク（BOLDLY）車両ページ）。TODO(根拠未確定)：同ページは現在閲覧できず、2017年のソフトバンクの発表では「乗車定員15名（座席数11）」と記載。公道の運用定員を確認すること"
+      }
+    },
+    {
+      "presetId": "auvetech-mica",
+      "name": "Auve Tech MiCa",
+      "capacity": 8,
+      "seats": null,
+      "standingAllowed": null,
+      "operatorOnBoard": true,
+      "operatorCount": null,
+      "maxSpeedKmh": null,
+      "avgSpeedKmh": null,
+      "rangeKm": null,
+      "chargeHours": null,
+      "wheelchair": null,
+      "autonomyLevel": null,
+      "sources": {
+        "capacity": "HICity運行概要（ソフトバンク 2023年12月25日発表 https://www.softbank.jp/drive/press/2023/20231225_01/）「乗車定員 8人 ※オペレーターを含む」",
+        "operatorOnBoard": "同上（定員にオペレーターを含むとの記載）"
+      }
+    },
+    {
+      "presetId": "tier4-minibus",
+      "name": "ティアフォー Minibus",
+      "capacity": 16,
+      "seats": 15,
+      "standingAllowed": false,
+      "operatorOnBoard": null,
+      "operatorCount": null,
+      "maxSpeedKmh": 35,
+      "avgSpeedKmh": null,
+      "rangeKm": 150,
+      "chargeHours": 2,
+      "wheelchair": null,
+      "autonomyLevel": null,
+      "sources": {
+        "capacity": "アイサンテクノロジー 製品仕様（https://aisan-mobility.com/lineup/adv/）「自動運転時は16名（座席のみの使用を推奨し、15席+運転席1席）」。定員23名（座席15人+運転席1人+立ち席7人）",
+        "seats": "同上（座席15人）",
+        "standingAllowed": "同上（自動運転時は座席のみの使用を推奨）",
+        "maxSpeedKmh": "同上「35 km/h（手動時は70km/h）」",
+        "rangeKm": "同上「航続距離（参考値）約150km」",
+        "chargeHours": "同上「充電時間 CHAdeMO 約2時間／AC三相400V 約2時間」"
+      }
+    },
+    {
+      "presetId": "tier4-minibus2",
+      "name": "ティアフォー Minibus 2.0",
+      "capacity": 16,
+      "seats": 15,
+      "standingAllowed": false,
+      "operatorOnBoard": null,
+      "operatorCount": null,
+      "maxSpeedKmh": 35,
+      "avgSpeedKmh": null,
+      "rangeKm": 200,
+      "chargeHours": 1.5,
+      "wheelchair": null,
+      "autonomyLevel": null,
+      "sources": {
+        "capacity": "アイサンテクノロジー 製品仕様（https://aisan-mobility.com/lineup/adv/）「自動運転時は16名（座席のみの使用を推奨）」。定員28名（座席11人+跳ね上げ席4人+運転席1人+立ち席12人）",
+        "seats": "同上（座席11人＋跳ね上げ席4人）",
+        "standingAllowed": "同上（自動運転時は座席のみの使用を推奨）",
+        "maxSpeedKmh": "同上「35 km/h（手動時は70km/h）」",
+        "rangeKm": "同上「航続距離（参考値）約200km」",
+        "chargeHours": "同上「充電時間 CHAdeMO 約1.5時間（AC 約2時間）」"
+      }
+    }
+  ]
+}
