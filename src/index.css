@@ -461,3 +461,15 @@ body {
   gap: 2px;
   font-size: 0.8rem;
 }
+
+.route-test-panel {
+  max-width: 320px;
+}
+
+.route-test-panel p {
+  margin: 6px 0;
+}
+
+.error {
+  color: #b42318;
+}

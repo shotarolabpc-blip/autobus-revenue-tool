@@ -1,0 +1,10 @@
+このフォルダの道路網データ（経路計算用タイル）は、OpenStreetMap のデータを加工して作成したものです。
+
+© OpenStreetMap contributors
+https://www.openstreetmap.org/copyright
+
+このデータは Open Data Commons Open Database License（ODbL）1.0 の下で提供されます。
+https://opendatacommons.org/licenses/odbl/1-0/
+
+作成方法：data_build/build_roads.py（採用する道路の条件は data_build/road_rules.yaml）
+形式：data_build/roadgraph.py の build_tiles の説明を参照（gzip 圧縮した独自のバイナリ形式）

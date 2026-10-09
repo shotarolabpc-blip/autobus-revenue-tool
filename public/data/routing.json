@@ -1,0 +1,6 @@
+{
+  "_comment": "経路計算の画面設定。推計値には影響しない。",
+  "snapSearchM": 500,
+  "snapWarnM": 50,
+  "marginsKm": [1, 4, 12]
+}

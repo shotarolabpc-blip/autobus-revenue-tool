@@ -70,3 +70,33 @@ python -m venv .venv
 
 - `data_raw/` は Git の管理対象外です（元データは再配布しません）。
 - 加工したデータには、画面と出力物に「国土数値情報（○○）（国土交通省）を加工して作成」と表示します。
+
+## 道路網タイル（P0-5）
+
+```powershell
+.venv\Scripts\python data_build\build_roads.py 13
+```
+
+- 元データ：Geofabrik が配布する OpenStreetMap の地域ファイル（例：`kanto-latest.osm.pbf`、約500MB）。
+  `data_raw/osm/` に無ければ自動で取得します（ログイン・同意は不要）。都道府県と地域の対応は `osm_regions.yaml`。
+- 範囲：都道府県の境界（国土数値情報 行政区域）に `boundary_margin_km`（初期値5km）の余白を付けた範囲。
+  県境をまたぐ経路は、この余白の範囲まで計算できます。
+- 採用する道路：`road_rules.yaml`（**初期案。確認待ち**）。バスが通れる道路だけを残し、一方通行（oneway）を反映します。
+- 交差点間を1本の辺にまとめた有向グラフを、`tile_size_deg`（初期値0.05度、約5km）四方のタイルに分けて
+  `public/data/roads/{県コード}/{tx}_{ty}.bin.gz` に出力します（gzip 圧縮した独自のバイナリ形式。形式は `roadgraph.py` に記載）。
+- 関東全域の点の座標をすべてメモリに持たないよう、「道路の絞り込み → 必要な点だけ座標を読む」の2段階で処理します。
+- pyosmium は全角文字を含む絶対パスを開けないため、`data_raw/osm/` に移動して相対パスで読みます。
+
+### GitHub Actions で実行する
+
+`.github/workflows/build-data.yml`：
+
+- 手動：Actions タブ →「Build data」→「Run workflow」。都道府県コード（空なら整備済みすべて）と対象（roads／ksj／all）を指定。
+- 定期：四半期ごと（1・4・7・10月の2日 3:00 JST）に、整備済みの都道府県の道路網を最新の OSM で作り直します。
+- 生成したデータをコミットし、公開（deploy.yml）を起動し直します。
+
+### OpenStreetMap のライセンス（ODbL）への準拠
+
+- 画面の地図と出力物に「© OpenStreetMap contributors」を表示します（`public/data/attributions.json`）。
+- 加工した道路網データ（派生データベース）は、`public/data/roads/` で ODbL の下に公開します（`LICENSE.txt`）。
+  作成手順（このスクリプトと `road_rules.yaml`）も公開リポジトリで公開しています。

@@ -1,0 +1,56 @@
+# 経路計算に使う道路の採否ルール（初期案）。要件 F-2-5c、P0-5。
+# TODO(根拠未確定): この初期案はユーザー確認待ち。変更したら build_roads.py を実行し直す。
+#
+# OSM のタグの意味は https://wiki.openstreetmap.org/wiki/JA:Key:highway などを参照。
+
+# バスが通れる道路として採用する highway の値
+include_highway:
+  - trunk # 国道など主要幹線
+  - trunk_link
+  - primary # 主要地方道など
+  - primary_link
+  - secondary # 一般都道府県道など
+  - secondary_link
+  - tertiary # 2車線程度の市町村道など
+  - tertiary_link
+  - unclassified # その他の一般道
+  - residential # 住宅地の道路（コミュニティバス・小型自動運転車両が走るため採用）
+  - living_street # 歩行者優先道路（小型車両の運行を想定して採用）
+  - busway # バス専用道
+
+# 初期案では採用しない値（理由）
+#   motorway / motorway_link : 高速道路。自動運転バス（低速・一般道）の想定外
+#   service                  : 駐車場・敷地内通路など。ただし下の bus_tags で通行可の明示があれば採用
+#   track / path / footway / cycleway / pedestrian / steps : 車両が通れない、または通行に適さない
+#   construction / proposed  : 工事中・計画中
+include_motorway: false
+
+# 通行可否を判断するタグ（後に書いたものほど優先）
+# 「no / private」なら通行不可、「yes / designated / permissive」なら通行可とする
+access_tags:
+  - access
+  - motor_vehicle
+  - psv # 公共交通車両
+  - bus
+
+# service（敷地内通路など）は、bus / psv が yes / designated のときだけ採用（駅前ロータリーのバス乗り場など）
+service_requires_bus_tag: true
+
+# 一方通行：oneway=yes/1/true は順方向のみ、-1 は逆方向のみ。
+# junction=roundabout は一方通行とみなす。
+# oneway:bus / oneway:psv = no の場合はバスは双方向通行可とする。
+oneway_bus_exception_tags:
+  - oneway:bus
+  - oneway:psv
+
+# 右左折禁止（type=restriction のリレーション）は初期版では反映しない（経由点で調整）。
+
+# 経路計算のコスト：距離（m）× 係数。初期案はすべて 1.0（＝最短距離）。
+# 幹線道路を優先したい場合などに値を変える。
+cost_factor: {}
+
+# 都道府県の境界の外側に含める余白（km）。県境をまたぐ経路に備える。
+boundary_margin_km: 5
+
+# 道路網タイルの大きさ（度）。表示範囲・経路の範囲のタイルだけを読み込む
+tile_size_deg: 0.05

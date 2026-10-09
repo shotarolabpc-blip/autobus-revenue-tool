@@ -1,0 +1,14 @@
+{
+  "prefCode": "99",
+  "tileSizeDeg": 0.05,
+  "origin": [120.0, 20.0],
+  "classes": ["residential", "primary"],
+  "costFactor": [1.0, 1.0],
+  "tiles": [
+    [380, 300],
+    [381, 300]
+  ],
+  "osmTimestamp": "test",
+  "nodeCount": 10,
+  "edgeCount": 27
+}

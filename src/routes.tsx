@@ -17,6 +17,11 @@ export const routes: RouteObject[] = [
         // 地図（MapLibre）は大きいので、地図画面を開いたときに読み込む
         lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }),
       },
+      {
+        // 経路計算の確認用（ナビゲーションには出さない）
+        path: 'route-test',
+        lazy: async () => ({ Component: (await import('./pages/RouteTestPage')).RouteTestPage }),
+      },
       { path: 'results', element: <ResultsPage /> },
       { path: 'assumptions', element: <AssumptionsPage /> },
       { path: '*', element: <NotFoundPage /> },

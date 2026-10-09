@@ -1,0 +1,95 @@
+# 配信データ（道路網・人口・バス停・バス路線）を作り直し、リポジトリにコミットして公開し直す。
+# - 手動実行：Actions タブ →「Build data」→「Run workflow」で、都道府県コードと対象を指定
+# - 定期実行：四半期ごと（1・4・7・10月の2日 3:00 JST）に、整備済みの都道府県の道路網を最新の OSM で作り直す
+name: Build data
+
+on:
+  workflow_dispatch:
+    inputs:
+      prefs:
+        description: '都道府県コード（空白区切り。例：13 14）。空なら整備済みの都道府県すべて'
+        required: false
+        default: ''
+      target:
+        description: '作り直す対象'
+        required: true
+        default: roads
+        type: choice
+        options:
+          - roads
+          - ksj
+          - all
+  schedule:
+    - cron: '0 18 1 1,4,7,10 *'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: build-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: data_build/requirements.txt
+
+      - run: pip install -r data_build/requirements.txt
+
+      - name: テスト
+        run: python -m pytest -q data_build/tests
+
+      - name: 対象の都道府県を決める
+        id: prefs
+        run: |
+          PREFS="${{ github.event.inputs.prefs }}"
+          if [ -z "$PREFS" ]; then
+            PREFS=$(python -c "import json;print(' '.join(p['code'] for p in json.load(open('public/data/prefectures.json',encoding='utf-8'))['items'] if p['dataAvailable']))")
+          fi
+          echo "prefs=$PREFS" >> "$GITHUB_OUTPUT"
+          echo "対象：$PREFS"
+
+      - name: 人口・バス停・バス路線（国土数値情報）
+        if: github.event.inputs.target == 'ksj' || github.event.inputs.target == 'all'
+        run: python data_build/build_prefecture.py ${{ steps.prefs.outputs.prefs }}
+
+      - name: 道路網（OpenStreetMap）
+        if: github.event_name == 'schedule' || github.event.inputs.target == 'roads' || github.event.inputs.target == 'all'
+        run: python data_build/build_roads.py ${{ steps.prefs.outputs.prefs }}
+
+      - name: 公開ルールの確認（1ファイル100MB未満）
+        run: |
+          big=$(find public/data -type f -size +99M)
+          if [ -n "$big" ]; then echo "100MB以上のファイルがあります: $big"; exit 1; fi
+          du -sh public/data
+
+      - name: 変更をコミット
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "変更はありません"
+          else
+            git commit -m "データ更新（${{ steps.prefs.outputs.prefs }}）"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # GITHUB_TOKEN による push では他のワークフローが動かないため、公開を明示的に起動する
+      - name: 公開し直す
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main

@@ -63,6 +63,17 @@
       "dataVersion": "N03-2026",
       "modified": true,
       "note": "本ツール用に加工して作成"
+    },
+    {
+      "id": "osm",
+      "name": "© OpenStreetMap contributors",
+      "provider": "OpenStreetMap",
+      "url": "https://www.openstreetmap.org/copyright",
+      "license": "ODbL 1.0",
+      "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "dataVersion": "2026-10-08",
+      "modified": true,
+      "note": "道路網（経路計算用）。加工した道路網データは ODbL に従い、このサイトの public/data/roads/ で公開"
     }
   ]
 }
