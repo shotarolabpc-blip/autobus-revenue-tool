@@ -30,7 +30,7 @@ body {
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .app-header {
@@ -71,7 +71,14 @@ body {
 
 .app-main {
   flex: 1;
+  min-height: 0;
+  overflow: auto;
   padding: 16px;
+}
+
+.app-main:has(> .map-page) {
+  padding: 0;
+  overflow: hidden;
 }
 
 .page h2 {
@@ -91,4 +98,54 @@ body {
   color: var(--color-muted);
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+}
+
+.page-message {
+  padding: 16px;
+  color: var(--color-muted);
+}
+
+.page-message.error {
+  color: #b42318;
+}
+
+/* 地図画面 */
+.map-page {
+  position: relative;
+  height: 100%;
+}
+
+.map-view {
+  position: absolute;
+  inset: 0;
+}
+
+.map-overlay-top-left {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1;
+}
+
+.map-panel {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.basemap-switcher {
+  display: flex;
+  gap: 10px;
+}
+
+.basemap-switcher label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
 }

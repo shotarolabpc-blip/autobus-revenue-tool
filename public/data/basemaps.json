@@ -1,0 +1,32 @@
+{
+  "defaultId": "pale",
+  "items": [
+    {
+      "id": "std",
+      "label": "標準地図",
+      "tiles": ["https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png"],
+      "tileSize": 256,
+      "minzoom": 5,
+      "maxzoom": 18,
+      "attributionIds": ["gsi-tiles"]
+    },
+    {
+      "id": "pale",
+      "label": "淡色地図",
+      "tiles": ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
+      "tileSize": 256,
+      "minzoom": 5,
+      "maxzoom": 18,
+      "attributionIds": ["gsi-tiles"]
+    },
+    {
+      "id": "photo",
+      "label": "航空写真",
+      "tiles": ["https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"],
+      "tileSize": 256,
+      "minzoom": 5,
+      "maxzoom": 18,
+      "attributionIds": ["gsi-seamlessphoto"]
+    }
+  ]
+}

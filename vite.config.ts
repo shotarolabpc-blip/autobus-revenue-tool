@@ -10,6 +10,8 @@ const base = process.env.BASE_PATH ?? '/'
 export default defineConfig({
   base,
   plugins: [react()],
+  // MapLibre は自身のファイル位置から Web Worker を読み込むため、事前バンドルの対象から外す
+  optimizeDeps: { exclude: ['maplibre-gl'] },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

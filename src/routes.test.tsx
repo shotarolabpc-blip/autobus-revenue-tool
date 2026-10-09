@@ -14,14 +14,18 @@ function renderAt(path: string) {
 afterEach(cleanup)
 
 describe('画面の切り替え', () => {
-  it('最初は地図の画面を表示する', () => {
+  it('最初は地図の画面を表示する', async () => {
     const router = renderAt('/')
+    expect(await screen.findByRole('region', { name: '地図' })).toBeTruthy()
     expect(router.state.location.pathname).toBe('/map')
-    expect(screen.getByRole('heading', { level: 2, name: '地図' })).toBeTruthy()
+  })
+
+  it('/map で地図の画面を表示する', async () => {
+    renderAt('/map')
+    expect(await screen.findByRole('region', { name: '地図' })).toBeTruthy()
   })
 
   it.each([
-    ['/map', '地図'],
     ['/results', '推計結果'],
     ['/assumptions', '前提条件'],
   ])('%s で「%s」の画面を表示する', (path, title) => {
@@ -31,6 +35,7 @@ describe('画面の切り替え', () => {
 
   it('ナビゲーションに3つの画面が順に並び、押すと画面が切り替わる', async () => {
     const router = renderAt('/map')
+    await screen.findByRole('region', { name: '地図' })
     const links = screen.getAllByRole('link')
     expect(links.map((a) => a.textContent)).toEqual(navItems.map((n) => n.label))
 
