@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from 'react-router'
 import { Layout } from './components/Layout'
 import { AssumptionsPage } from './pages/AssumptionsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { PlanPage } from './pages/PlanPage'
 import { ProjectPage } from './pages/ProjectPage'
 import { ResultsPage } from './pages/ResultsPage'
 
@@ -22,6 +23,7 @@ export const routes: RouteObject[] = [
         path: 'route-test',
         lazy: async () => ({ Component: (await import('./pages/RouteTestPage')).RouteTestPage }),
       },
+      { path: 'plan', element: <PlanPage /> },
       { path: 'results', element: <ResultsPage /> },
       { path: 'assumptions', element: <AssumptionsPage /> },
       { path: '*', element: <NotFoundPage /> },

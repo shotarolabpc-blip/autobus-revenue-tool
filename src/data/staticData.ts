@@ -3,6 +3,10 @@ import {
   attributionsFileSchema,
   basemapsFileSchema,
   defaultsFileSchema,
+  holidaysFileSchema,
+  vehiclePresetsFileSchema,
+  type HolidaysFile,
+  type VehiclePresetsFile,
   municipalitiesFileSchema,
   prefecturesFileSchema,
   type Attribution,
@@ -50,3 +54,8 @@ export const loadMunicipalities = (prefCode: string): Promise<Municipality[]> =>
   cached(`municipalities/${prefCode}.json`, municipalitiesFileSchema)
     .then((f) => f.items)
     .catch(() => [])
+
+export const loadHolidays = (): Promise<HolidaysFile> => cached('holidays.json', holidaysFileSchema)
+
+export const loadVehiclePresets = (): Promise<VehiclePresetsFile> =>
+  cached('vehicle_presets.json', vehiclePresetsFileSchema)

@@ -51,7 +51,7 @@ describe('画面の切り替え', () => {
     expect(screen.getByRole('heading', { level: 2, name: title })).toBeTruthy()
   })
 
-  it('ナビゲーションに4つの画面が順に並び、押すと画面が切り替わる', async () => {
+  it('ナビゲーションに5つの画面が順に並び、押すと画面が切り替わる', async () => {
     const router = renderAt('/map')
     await screen.findByRole('region', { name: '地図' })
     const links = screen.getAllByRole('link')

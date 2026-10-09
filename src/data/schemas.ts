@@ -114,3 +114,38 @@ export const populationUnitSchema = z.object({
 export type PopulationUnit = z.infer<typeof populationUnitSchema>
 
 export const populationTileSchema = z.object({ units: z.array(populationUnitSchema) })
+
+/** 祝日データ（data_build/build_holidays.py が生成） */
+export const holidaysFileSchema = z.object({
+  source: z.string(),
+  sourceUrl: z.url(),
+  publishedThrough: z.string(),
+  estimatedNote: z.string(),
+  yearEnd: z.object({ from: z.string(), to: z.string(), source: z.string() }),
+  items: z.array(z.object({ date: z.string(), name: z.string(), estimated: z.boolean() })),
+})
+export type HolidaysFile = z.infer<typeof holidaysFileSchema>
+
+/** 車両プリセット（public/data/vehicle_presets.json） */
+export const vehiclePresetsFileSchema = z.object({
+  checkedAt: z.string(),
+  items: z.array(
+    z.object({
+      presetId: z.string(),
+      name: z.string(),
+      capacity: z.number().nullable(),
+      seats: z.number().nullable(),
+      standingAllowed: z.boolean().nullable(),
+      operatorOnBoard: z.boolean().nullable(),
+      operatorCount: z.number().nullable(),
+      maxSpeedKmh: z.number().nullable(),
+      avgSpeedKmh: z.number().nullable(),
+      rangeKm: z.number().nullable(),
+      chargeHours: z.number().nullable(),
+      wheelchair: z.boolean().nullable(),
+      autonomyLevel: z.enum(['L2', 'L4']).nullable(),
+      sources: z.record(z.string(), z.string()),
+    }),
+  ),
+})
+export type VehiclePresetsFile = z.infer<typeof vehiclePresetsFileSchema>
