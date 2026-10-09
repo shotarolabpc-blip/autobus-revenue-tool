@@ -1,0 +1,94 @@
+:root {
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-accent: #1f6feb;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Hiragino Sans',
+    'Yu Gothic UI',
+    Meiryo,
+    sans-serif;
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding: 8px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.app-nav-link {
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.app-nav-link:hover {
+  background: var(--color-bg);
+}
+
+.app-nav-link.active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.app-main {
+  flex: 1;
+  padding: 16px;
+}
+
+.page h2 {
+  margin-top: 0;
+}
+
+.page-placeholder {
+  color: var(--color-muted);
+}
+
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}

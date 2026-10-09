@@ -1,0 +1,37 @@
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+.vite/
+coverage/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# 手動で置く元データ（再配布しない）
+data_raw/
+# data_build の中間生成物
+data_build/_work/
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/

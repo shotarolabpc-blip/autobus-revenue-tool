@@ -1,0 +1,67 @@
+# main への push（または手動実行）で、テスト → ビルド → GitHub Pages へ公開する。
+# 事前に リポジトリの Settings → Pages → Source を「GitHub Actions」にしておくこと。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開が重なったときは、実行中のものを止めずに順番待ちにする
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: 書式・静的解析・型チェック
+        run: |
+          npm run format:check
+          npm run lint
+          npm run typecheck
+
+      - name: テスト
+        run: npm test
+
+      - name: Pages の公開パスを取得
+        id: pages
+        uses: actions/configure-pages@v6
+
+      - name: ビルド
+        run: npm run build
+        env:
+          # 例：/autobus-revenue-tool/（リポジトリ名を変えても自動で追従する）
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+
+      - name: 公開ルールの確認（noindex・robots.txt・容量）
+        run: npm run check:dist
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

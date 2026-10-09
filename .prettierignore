@@ -1,0 +1,7 @@
+dist
+coverage
+data_raw
+package-lock.json
+# 要件定義書などの文書は手で書いた形を保つ
+docs
+CLAUDE.md
