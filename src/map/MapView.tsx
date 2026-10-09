@@ -10,6 +10,7 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useRef } from 'react'
 import type { Attribution, Basemap, BBox } from '../data/schemas'
 import { attributionHtml } from './attribution'
+import { addSlots } from './layerSlots'
 
 // ビルド後も MapLibre の Web Worker を正しい場所から読み込めるよう、URLを明示する
 setWorkerUrl(maplibreWorkerUrl)
@@ -64,6 +65,7 @@ export function MapView({ basemap, attributions, initialView, onMapReady }: Prop
     map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left')
     map.on('load', () => {
       setBasemap(map, basemapRef.current, attributions)
+      addSlots(map)
       onMapReady?.(map)
     })
     mapRef.current = map

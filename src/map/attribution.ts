@@ -20,7 +20,7 @@ export function attributionHtml(all: Attribution[], ids: string[]): string {
 
 /** 出力物（CSV・Excel など）に書く、文字だけの出典一覧 */
 export function attributionText(a: Attribution): string {
-  const parts = [`${a.name}（${a.provider}）`, a.license]
+  const parts = [`${a.name}（${a.provider}）${a.modified ? 'を加工して作成' : ''}`, a.license]
   if (a.dataVersion) parts.push(`版：${a.dataVersion}`)
   parts.push(a.url)
   return parts.join(' / ')

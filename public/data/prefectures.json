@@ -77,8 +77,8 @@
     {
       "code": "13",
       "name": "東京都",
-      "view": null,
-      "dataAvailable": false
+      "view": [138.9429, 35.5013, 139.9189, 35.8984],
+      "dataAvailable": true
     },
     {
       "code": "14",

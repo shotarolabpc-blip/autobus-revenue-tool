@@ -5,3 +5,9 @@ package-lock.json
 # 要件定義書などの文書は手で書いた形を保つ
 docs
 CLAUDE.md
+# 生成データ（data_build が書き出す）
+public/data/population
+public/data/busstops
+public/data/busroutes
+public/data/municipalities
+public/data/roads

@@ -115,7 +115,8 @@ body {
   height: 100%;
 }
 
-.map-view {
+/* MapLibre の .maplibregl-map（position: relative）より優先させる */
+.map-page .map-view {
   position: absolute;
   inset: 0;
 }
@@ -397,4 +398,66 @@ body {
   background: rgba(238, 244, 255, 0.92);
   border: 4px dashed var(--color-accent);
   pointer-events: none;
+}
+
+/* 地図のパネル */
+.reference-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 280px;
+}
+
+.reference-layers label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.reference-layers .indent {
+  padding-left: 20px;
+}
+
+.panel-title {
+  font-weight: 600;
+}
+
+.panel-note {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.legend small {
+  width: 100%;
+  color: var(--color-muted);
+}
+
+.map-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
 }

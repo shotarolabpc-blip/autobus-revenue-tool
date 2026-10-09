@@ -10,6 +10,8 @@ export const attributionSchema = z.object({
   licenseUrl: z.url().nullable(),
   /** データの版（例：P11-2022）。地図タイルなど版を持たないものは null */
   dataVersion: z.string().nullable(),
+  /** 元データを加工して使っているか（CC BY の「変更した旨」の表示に使う） */
+  modified: z.boolean().optional(),
   note: z.string().optional(),
 })
 export type Attribution = z.infer<typeof attributionSchema>
@@ -87,3 +89,28 @@ export const municipalitiesFileSchema = z.object({
   items: z.array(z.object({ code: z.string().regex(/^\d{5}$/), name: z.string() })),
 })
 export type Municipality = z.infer<typeof municipalitiesFileSchema>['items'][number]
+
+/** 人口メッシュ（都道府県ごとの目次）。data_build/population.py が生成 */
+export const populationIndexSchema = z.object({
+  prefCode: z.string(),
+  version: z.string(),
+  years: z.array(z.number().int()).min(1),
+  ageClasses: z.tuple([
+    z.literal('0-14'),
+    z.literal('15-64'),
+    z.literal('65-74'),
+    z.literal('75+'),
+  ]),
+  tiles: z.array(z.string()),
+})
+export type PopulationIndex = z.infer<typeof populationIndexSchema>
+
+/** 人口の集計単位（秘匿・合算メッシュをまとめたもの）。pop は [年次][年齢階層] */
+export const populationUnitSchema = z.object({
+  id: z.string(),
+  meshes: z.array(z.string()).min(1),
+  pop: z.array(z.array(z.number()).length(4)),
+})
+export type PopulationUnit = z.infer<typeof populationUnitSchema>
+
+export const populationTileSchema = z.object({ units: z.array(populationUnitSchema) })
