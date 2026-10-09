@@ -18,6 +18,15 @@ type Sample = {
   stops: { id: string; lng: number; lat: number; radiusM: number }[]
   coefficients: Coefficients
   days: { weekday: number; holiday: number }
+  case300: {
+    stop: { id: string; lng: number; lat: number; radiusM: number }
+    meshes: Record<string, Record<string, AgePop>>
+    expected: {
+      weights: Record<string, number>
+      '2027': { stopPop: AgePop; dailyWeekday: number; dailyHoliday: number; annual: number }
+      '2028': { stopPop: AgePop; dailyWeekday: number; dailyHoliday: number; annual: number }
+    }
+  }
   expected: {
     circleShareOfMesh: number
     '2027': {
@@ -34,8 +43,11 @@ const sample = JSON.parse(
   readFileSync(join(process.cwd(), 'tests', 'fixtures', 'demand_sample.json'), 'utf8'),
 ) as Sample
 
-/** 相対誤差 1% 以内（面積は10m格子で数えるため） */
-const near = (actual: number, expected: number, tol = 0.01) =>
+/**
+ * 相対誤差 0.2% 以内。面積は5m格子で数えるため誤差が出る（実測：半径100mで約0.13%、半径300mで約0.005%）。
+ * 2027年度と2028年度の差は約0.8〜0.9%なので、人口の補間が1年ずれると検出できる。
+ */
+const near = (actual: number, expected: number, tol = 0.002) =>
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(Math.abs(expected) * tol + 1e-9)
 
 function sampleInput(over: Partial<DemandInput> = {}): DemandInput {
@@ -76,7 +88,7 @@ describe('手計算サンプル（バス停3つ・メッシュ2つ）', () => {
     near(w.get('C')!.get('533946112')!, f / 2)
   })
 
-  it('2027年度：バス停ごとの勢圏人口・1日あたり・年間利用者数が期待値と一致', () => {
+  it('2027年度：バス停ごとの勢圏人口・1日あたり・年間延べ乗車人員が期待値と一致', () => {
     const [y2027, y2028] = computeDemand(sampleInput())
     const e = sample.expected['2027']
     for (const st of y2027.stops) {
@@ -100,6 +112,44 @@ describe('手計算サンプル（バス停3つ・メッシュ2つ）', () => {
       .filter((t) => t.dayType === 'weekday')
       .reduce((a, t) => a + t.dailyBase, 0)
     expect(sumWeekday).toBeCloseTo(y.dailyBase.weekday, 10)
+  })
+})
+
+describe('半径300m（初期値）：円がメッシュの境界で切られるケース', () => {
+  const c = sample.case300
+  const units = Object.keys(c.meshes).map((code) => ({ id: code, meshes: [code] }))
+  const input = () =>
+    sampleInput({
+      stopIds: [c.stop.id],
+      weights: catchmentWeights([c.stop], units, 5),
+      population: {
+        years: [2025, 2030],
+        units: new Map(Object.entries(c.meshes).map(([code, m]) => [code, [m['2025'], m['2030']]])),
+      },
+    })
+
+  it('4つのメッシュの角にあるバス停：各メッシュに円のちょうど1/4が入る', () => {
+    const w = input().weights.get('D')!
+    for (const [code, expected] of Object.entries(c.expected.weights)) {
+      near(w.get(code)!, expected)
+    }
+    // 4つの按分率の合計 ＝ 円の面積 ÷ メッシュの面積（≒ 1.081）
+    const total = [...w.values()].reduce((a, b) => a + b, 0)
+    near(total, (Math.PI * 300 ** 2) / 261_549.6)
+  })
+
+  it('勢圏人口・1日あたり・年間延べ乗車人員が期待値と一致', () => {
+    const [y2027, y2028] = computeDemand(input())
+    for (const [y, key] of [
+      [y2027, '2027'],
+      [y2028, '2028'],
+    ] as const) {
+      const e = c.expected[key]
+      e.stopPop.forEach((v, k) => near(y.stops[0].pop[k], v))
+      near(y.dailyRiders.weekday, e.dailyWeekday)
+      near(y.dailyRiders.holiday, e.dailyHoliday)
+      near(y.totalAnnual, e.annual)
+    }
   })
 })
 

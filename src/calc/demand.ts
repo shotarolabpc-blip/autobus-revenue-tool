@@ -1,7 +1,7 @@
 /**
  * 需要推計（要件 F-5、5.1・5.2・5.3・5.5）。純粋関数のみ。
  *
- *   年間利用者数(t) =
+ *   年間延べ乗車人員(t) =
  *     Σ_バス停 Σ_年齢階層a [ 勢圏人口(a,t) × 外出率(a) × 1日トリップ数(a) × バス分担率(a) × 路線捕捉率 ]
  *     × 運行サービス補正係数 × 運賃補正係数 × 立ち上がり係数(t) × 年間運行日数換算
  *     ＋ 施設・観光等の外部需要
@@ -87,11 +87,11 @@ export type YearDemand = {
   dailyRiders: Record<DayType, number>
   capped: Record<DayType, boolean>
   days: Record<DayType, number>
-  /** 住民による年間利用者数（頭打ち後） */
+  /** 住民による年間延べ乗車人員（頭打ち後） */
   residentsAnnual: number
-  /** 施設・観光等の外部需要（年間・頭打ち後） */
+  /** 施設・観光等の外部需要（年間延べ乗車人員・頭打ち後） */
   facilityAnnual: number
-  /** 年間利用者数 */
+  /** 年間延べ乗車人員 */
   totalAnnual: number
 }
 
