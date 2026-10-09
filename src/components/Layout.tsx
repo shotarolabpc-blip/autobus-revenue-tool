@@ -1,7 +1,13 @@
 import { NavLink, Outlet } from 'react-router'
 import { navItems } from '../navItems'
+import { useAutosave } from '../project/useAutosave'
+import { FileDropZone } from './FileDropZone'
+import { NoticeDialog } from './NoticeDialog'
+import { ProjectBar } from './ProjectBar'
+import { RestoreDraftDialog } from './RestoreDraftDialog'
 
 export function Layout() {
+  useAutosave()
   return (
     <div className="app">
       <header className="app-header">
@@ -13,6 +19,7 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        <ProjectBar />
       </header>
       <main className="app-main">
         <Outlet />
@@ -21,6 +28,9 @@ export function Layout() {
         <span>ツール版数 v{__APP_VERSION__}</span>
         <span>入力したデータはこのブラウザの中だけで扱い、外部へは送信しません。</span>
       </footer>
+      <FileDropZone />
+      <RestoreDraftDialog />
+      <NoticeDialog />
     </div>
   )
 }

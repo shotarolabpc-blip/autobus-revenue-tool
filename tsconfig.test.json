@@ -2,8 +2,8 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
     "target": "es2023",
-    "lib": ["ES2023"],
-    "types": ["node"],
+    "lib": ["ES2023", "DOM"],
+    "types": ["node", "vite/client"],
     "skipLibCheck": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -12,8 +12,9 @@
     "moduleDetection": "force",
     "noEmit": true,
     "strict": true,
+    "jsx": "react-jsx",
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["tests"]
+  "include": ["tests", "src/**/*.test.ts", "src/**/*.test.tsx", "src/vite-env.d.ts"]
 }

@@ -2,9 +2,13 @@ import type { z } from 'zod'
 import {
   attributionsFileSchema,
   basemapsFileSchema,
+  defaultsFileSchema,
+  municipalitiesFileSchema,
   prefecturesFileSchema,
   type Attribution,
   type BasemapsFile,
+  type DefaultsFile,
+  type Municipality,
   type PrefecturesFile,
 } from './schemas'
 
@@ -38,3 +42,11 @@ export const loadBasemaps = (): Promise<BasemapsFile> => cached('basemaps.json',
 
 export const loadPrefectures = (): Promise<PrefecturesFile> =>
   cached('prefectures.json', prefecturesFileSchema)
+
+export const loadDefaults = (): Promise<DefaultsFile> => cached('defaults.json', defaultsFileSchema)
+
+/** 市区町村の一覧。未生成の都道府県は空の一覧を返す */
+export const loadMunicipalities = (prefCode: string): Promise<Municipality[]> =>
+  cached(`municipalities/${prefCode}.json`, municipalitiesFileSchema)
+    .then((f) => f.items)
+    .catch(() => [])

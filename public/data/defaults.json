@@ -1,0 +1,46 @@
+{
+  "_comment": "画面の初期値。各値に出典（source）と調査年・制定年（year）を持たせる。根拠のない値は置かない。",
+  "items": {
+    "projectYears": {
+      "value": 10,
+      "min": 5,
+      "max": 30,
+      "unit": "年",
+      "source": "要件定義書 v0.5 付録B「推計期間」（人口推計の5年刻み2区間分）",
+      "year": null
+    },
+    "catchmentM": {
+      "value": 300,
+      "options": [300, 500],
+      "unit": "m",
+      "source": "国土交通省「都市構造の評価に関するハンドブック」（バス停徒歩圏300m、高齢者徒歩圏500m）",
+      "year": 2014
+    },
+    "maxLoadFactor": {
+      "value": 1,
+      "min": 0,
+      "max": 1,
+      "unit": "比率",
+      "source": "要件定義書 v0.5 付録B「最大乗車率」（自動運転時定員を上限とし割増しない）",
+      "year": null
+    },
+    "consumptionTaxRate": {
+      "value": 0.1,
+      "unit": "比率",
+      "source": "消費税法（標準税率10%）",
+      "year": 2019
+    },
+    "rampUpFactor": {
+      "value": 1,
+      "unit": "比率",
+      "source": "公的な根拠値がないため既定では補正しない（要件定義書 v0.5 付録B、課題B-4）",
+      "year": null
+    },
+    "fareElasticity": {
+      "value": 0,
+      "unit": "弾力性",
+      "source": "公的な根拠値がないため既定では補正しない（要件定義書 v0.5 付録B、課題B-4）",
+      "year": null
+    }
+  }
+}

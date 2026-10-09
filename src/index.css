@@ -149,3 +149,252 @@ body {
   gap: 4px;
   cursor: pointer;
 }
+
+/* 共通部品 */
+.page-narrow {
+  max-width: 920px;
+}
+
+.card {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.card h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.btn {
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid #c9ced6;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-bg);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1a5fd0;
+}
+
+.btn-danger {
+  color: #b42318;
+  border-color: #f1b5ae;
+}
+
+.btn-small {
+  padding: 2px 8px;
+  font-size: 0.85rem;
+}
+
+.button-row,
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+}
+
+.field > span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  padding: 6px 8px;
+  font: inherit;
+  border: 1px solid #c9ced6;
+  border-radius: 6px;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hint {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.form-errors {
+  margin: 0;
+  padding-left: 1.2em;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+.text-warning {
+  color: #b54708;
+}
+
+.badge {
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+}
+
+.badge-warning {
+  color: #93370d;
+  background: #fef0c7;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 12px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table th {
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table .actions {
+  display: flex;
+  gap: 4px;
+}
+
+.table tr.is-active td {
+  background: #eef4ff;
+}
+
+/* ヘッダーのプロジェクト表示 */
+.project-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.project-bar-empty {
+  color: var(--color-muted);
+}
+
+.project-bar-name {
+  max-width: 260px;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.project-bar-scenario {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.project-bar select {
+  padding: 4px 6px;
+  font: inherit;
+}
+
+/* ダイアログ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.modal {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 20px;
+  background: var(--color-surface);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-error .modal-title {
+  color: #b42318;
+}
+
+.modal-title {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.notice-list {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: rgba(238, 244, 255, 0.92);
+  border: 4px dashed var(--color-accent);
+  pointer-events: none;
+}

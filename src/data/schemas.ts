@@ -56,3 +56,34 @@ export const prefecturesFileSchema = z.object({
   items: z.array(prefectureSchema).length(47),
 })
 export type PrefecturesFile = z.infer<typeof prefecturesFileSchema>
+
+/** 画面の初期値（出典・年付き） */
+export const defaultItemSchema = z.object({
+  value: z.number(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+  options: z.array(z.number()).optional(),
+  unit: z.string(),
+  source: z.string().min(1),
+  year: z.number().int().nullable(),
+})
+export type DefaultItem = z.infer<typeof defaultItemSchema>
+
+export const defaultsFileSchema = z.object({
+  items: z.object({
+    projectYears: defaultItemSchema,
+    catchmentM: defaultItemSchema,
+    maxLoadFactor: defaultItemSchema,
+    consumptionTaxRate: defaultItemSchema,
+    rampUpFactor: defaultItemSchema,
+    fareElasticity: defaultItemSchema,
+  }),
+})
+export type DefaultsFile = z.infer<typeof defaultsFileSchema>
+
+/** 市区町村の一覧（data_build が都道府県ごとに生成） */
+export const municipalitiesFileSchema = z.object({
+  prefCode: z.string().regex(/^\d{2}$/),
+  items: z.array(z.object({ code: z.string().regex(/^\d{5}$/), name: z.string() })),
+})
+export type Municipality = z.infer<typeof municipalitiesFileSchema>['items'][number]
