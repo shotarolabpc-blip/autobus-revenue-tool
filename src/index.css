@@ -473,3 +473,182 @@ body {
 .error {
   color: #b42318;
 }
+
+.map-overlay-top-right {
+  position: absolute;
+  top: 10px;
+  right: 50px;
+  bottom: 40px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  max-width: calc(100% - 70px);
+  pointer-events: none;
+}
+
+.map-overlay-top-right > * {
+  pointer-events: auto;
+}
+
+.route-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.field-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.field-inline > span {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.input-small {
+  width: 84px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 0.85rem;
+  border: 1px solid #c9ced6;
+  border-radius: 4px;
+}
+
+.stop-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.stop-row.is-selected {
+  background: #eef4ff;
+  border-color: #b9d1ff;
+}
+
+.stop-row.is-dragging {
+  opacity: 0.4;
+}
+
+.drag-handle {
+  color: var(--color-muted);
+  cursor: grab;
+}
+
+.stop-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: #dc2626;
+  border-radius: 999px;
+}
+
+.stop-name {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 6px;
+  font: inherit;
+  border: 1px solid #d5dae1;
+  border-radius: 4px;
+}
+
+.btn-icon {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 0.7rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid #d5dae1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-icon:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.segment-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 2px 0 4px 34px;
+  font-size: 0.8rem;
+}
+
+.segment-row select {
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.segment-km {
+  min-width: 64px;
+  font-variant-numeric: tabular-nums;
+}
+
+.route-total {
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+.badge {
+  color: #0e7490;
+  background: #e0f2fe;
+}
+
+/* 地図上のバス停・経由点 */
+.stop-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font:
+    700 12px/1 system-ui,
+    sans-serif;
+  color: #fff;
+  background: #dc2626;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+}
+
+.stop-marker.is-existing {
+  background: #0e7490;
+}
+
+.stop-marker.is-selected {
+  outline: 3px solid #fbbf24;
+}
+
+.via-marker {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 3px solid #1f6feb;
+  border-radius: 999px;
+  cursor: grab;
+}

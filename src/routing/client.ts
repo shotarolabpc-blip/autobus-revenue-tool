@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { fetchJson } from '../data/staticData'
-import type { LngLat, RouteResult } from './router'
+import type { LngLat, RouteResult, SnapResult } from './router'
 import type { RouteRequest, RouteResponse } from './worker'
 
 export const routingSettingsSchema = z.object({
@@ -43,6 +43,7 @@ export async function computeRoute(
   const s = await loadRoutingSettings()
   const id = nextId++
   const req: RouteRequest = {
+    type: 'route',
     id,
     prefCode,
     from,
@@ -54,5 +55,19 @@ export async function computeRoute(
     getWorker().postMessage(req)
   })
   if (!res.ok) throw new Error(res.error)
+  if (!('result' in res)) throw new Error('経路計算の応答が不正です')
   return { result: res.result, elapsedMs: res.elapsedMs, loadedTiles: res.loadedTiles }
+}
+
+/** 点を最寄りの道路に寄せる（近くに道路がなければ null） */
+export async function snapToRoad(prefCode: string, point: LngLat): Promise<SnapResult | null> {
+  const s = await loadRoutingSettings()
+  const id = nextId++
+  const req: RouteRequest = { type: 'snap', id, prefCode, point, searchM: s.snapSearchM }
+  const res = await new Promise<RouteResponse>((resolve) => {
+    pending.set(id, resolve)
+    getWorker().postMessage(req)
+  })
+  if (!res.ok) throw new Error(res.error)
+  return 'snap' in res ? res.snap : null
 }

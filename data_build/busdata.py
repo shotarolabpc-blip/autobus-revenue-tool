@@ -41,16 +41,19 @@ def build_busstops(pref: str, src_path: str, out_path: Path) -> dict:
             }
         )
         geom = d["geometry"]
+        stop_id = f"{pref}-{i:06d}"
         features.append(
             {
                 "type": "Feature",
                 # 同じ版のデータから作れば同じIDになる（プロジェクトファイルの existingStopId に使う）
-                "id": f"{pref}-{i:06d}",
+                "id": stop_id,
                 "geometry": {
                     "type": "Point",
                     "coordinates": [round(geom.x, COORD_DIGITS), round(geom.y, COORD_DIGITS)],
                 },
                 "properties": {
+                    # 地図ライブラリは文字列の feature id を扱えないため、属性にも入れる
+                    "id": stop_id,
                     "name": _clean(d.get("P11_001")) or "",
                     "operator": _clean(d.get("P11_002")) or "",
                     "types": types,

@@ -1,13 +1,17 @@
 import type { Map as MlMap } from 'maplibre-gl'
 import { useState } from 'react'
-import { loadAttributions, loadBasemaps, loadPrefectures } from '../data/staticData'
+import { RoutePanel } from '../components/RoutePanel'
+import { loadAttributions, loadBasemaps, loadDefaults, loadPrefectures } from '../data/staticData'
 import { useAsync } from '../data/useAsync'
 import { BasemapSwitcher } from '../map/BasemapSwitcher'
 import { MapView } from '../map/MapView'
 import { ReferenceLayers } from '../map/ReferenceLayers'
-import { useProjectStore } from '../project/store'
+import { RouteEditor } from '../map/RouteEditor'
+import { useActiveScenario, useProjectStore } from '../project/store'
+import { useRouteComputation } from '../project/useRouteComputation'
 
 const BASEMAP_KEY = 'basemap'
+const NO_VERSIONS: Record<string, string> = {}
 
 function readSavedBasemap(): string | null {
   try {
@@ -17,13 +21,17 @@ function readSavedBasemap(): string | null {
   }
 }
 
-const loadAll = () => Promise.all([loadBasemaps(), loadAttributions(), loadPrefectures()])
+const loadAll = () =>
+  Promise.all([loadBasemaps(), loadAttributions(), loadPrefectures(), loadDefaults()])
 
 export function MapPage() {
   const state = useAsync(loadAll)
   const [basemapId, setBasemapId] = useState<string | null>(readSavedBasemap)
   const [map, setMap] = useState<MlMap | null>(null)
   const project = useProjectStore((s) => s.project?.project ?? null)
+  const dataVersions = useProjectStore((s) => s.project?.dataVersions ?? NO_VERSIONS)
+  const scenario = useActiveScenario()
+  useRouteComputation(project?.municipality.prefCode ?? null)
 
   if (state.status !== 'ready') {
     return (
@@ -37,7 +45,7 @@ export function MapPage() {
     )
   }
 
-  const [basemaps, attributions, prefectures] = state.data
+  const [basemaps, attributions, prefectures, defaults] = state.data
   const basemap =
     basemaps.items.find((b) => b.id === basemapId) ??
     basemaps.items.find((b) => b.id === basemaps.defaultId)!
@@ -71,6 +79,30 @@ export function MapPage() {
             attributions={attributions}
             preferredYear={project?.startFiscalYear}
           />
+        )}
+      </div>
+      {map && scenario && (
+        <RouteEditor
+          map={map}
+          scenario={scenario}
+          prefCode={prefCode}
+          defaultCatchmentM={defaults.items.catchmentM.value}
+        />
+      )}
+      <div className="map-overlay-top-right">
+        {scenario ? (
+          <RoutePanel
+            scenario={scenario}
+            catchmentOptions={
+              defaults.items.catchmentM.options ?? [defaults.items.catchmentM.value]
+            }
+            catchmentSource={defaults.items.catchmentM.source}
+            dataVersions={dataVersions}
+          />
+        ) : (
+          <div className="map-panel">
+            ルートを作るには、まず「プロジェクト」画面でプロジェクトを作成してください。
+          </div>
         )}
       </div>
     </section>

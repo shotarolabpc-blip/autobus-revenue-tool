@@ -9,18 +9,16 @@ import {
   type RoadIndex,
   type RouteOptions,
   type RouteResult,
+  type SnapResult,
 } from './router'
 
-export type RouteRequest = {
-  id: number
-  prefCode: string
-  from: LngLat
-  to: LngLat
-  options: RouteOptions
-}
+export type RouteRequest =
+  | { type: 'route'; id: number; prefCode: string; from: LngLat; to: LngLat; options: RouteOptions }
+  | { type: 'snap'; id: number; prefCode: string; point: LngLat; searchM: number }
 
 export type RouteResponse =
   | { id: number; ok: true; result: RouteResult; elapsedMs: number; loadedTiles: number }
+  | { id: number; ok: true; snap: SnapResult | null }
   | { id: number; ok: false; error: string }
 
 const graphs = new Map<string, Promise<RoadGraph | null>>()
@@ -47,10 +45,21 @@ function getGraph(prefCode: string): Promise<RoadGraph | null> {
 }
 
 self.onmessage = async (ev: MessageEvent<RouteRequest>) => {
-  const { id, prefCode, from, to, options } = ev.data
+  const req = ev.data
+  const { id, prefCode } = req
   try {
     const t0 = performance.now()
     const graph = await getGraph(prefCode)
+    if (req.type === 'snap') {
+      const res: RouteResponse = {
+        id,
+        ok: true,
+        snap: graph ? await graph.snap(req.point, req.searchM) : null,
+      }
+      self.postMessage(res)
+      return
+    }
+    const { from, to, options } = req
     if (!graph) {
       const res: RouteResponse = {
         id,

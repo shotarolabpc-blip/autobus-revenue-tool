@@ -5,6 +5,7 @@ import type { Attribution, Prefecture, PopulationIndex, PopulationUnit } from '.
 import { dataUrl } from '../data/staticData'
 import type { Bounds } from '../gis/mesh'
 import { attributionHtml } from './attribution'
+import { useEditState } from './editState'
 
 type Toggles = { population: boolean; busroutes: boolean; busstops: boolean }
 
@@ -136,6 +137,8 @@ export function ReferenceLayers({ map, prefectures, attributions, preferredYear 
       }
     }
     const onClick = (e: MapLayerMouseEvent) => {
+      // バス停の追加中は、クリックは「採用」に使うので吹き出しを出さない
+      if (useEditState.getState().mode === 'addStop') return
       const f = e.features?.[0]
       if (!f || f.geometry.type !== 'Point') return
       const p = f.properties as { name: string; operator: string; routes: string }

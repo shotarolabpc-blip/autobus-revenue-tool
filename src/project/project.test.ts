@@ -1,3 +1,4 @@
+import { withBom } from '../util/text'
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createProject, duplicateScenario, nextFiscalYear, type ProjectDefaults } from './factory'
@@ -73,7 +74,7 @@ describe('保存と読込', () => {
   })
 
   it('BOM付きのファイルも読める', () => {
-    const r = parseProjectFile('﻿' + serializeProject(sample(), new Date(), '0.1.0'))
+    const r = parseProjectFile(withBom(serializeProject(sample(), new Date(), '0.1.0')))
     expect(r.ok).toBe(true)
   })
 

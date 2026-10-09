@@ -462,6 +462,15 @@ export class RoadGraph {
     }
   }
 
+  /** 点を最寄りの道路に寄せる（F-2-5d）。近くに道路がなければ null */
+  async snap(p: LngLat, searchM: number): Promise<SnapResult | null> {
+    const dLat = searchM / 111_000 + 0.002
+    const dLng = dLat / Math.max(0.1, Math.cos(p[1] * RAD))
+    await this.ensureBounds(p[0] - dLng, p[1] - dLat, p[0] + dLng, p[1] + dLat)
+    const pos = this.nearestPositions(p, searchM)
+    return pos.length ? { point: pos[0].point, distanceM: pos[0].distanceM } : null
+  }
+
   /** 2点間の経路。必要な範囲のタイルを読み込み、見つからなければ範囲を広げて再試行する */
   async route(a: LngLat, b: LngLat, opt: RouteOptions): Promise<RouteResult> {
     let lastReason: RouteResult | null = null
