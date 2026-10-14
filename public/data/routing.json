@@ -1,6 +1,7 @@
 {
-  "_comment": "経路計算の画面設定。推計値には影響しない。",
+  "_comment": "経路計算の画面設定。推計値には影響しない。viaSnapM：経由点を置いたとき、この距離（m）以内に交差点があればそこへ吸着させる。",
   "snapSearchM": 500,
   "snapWarnM": 50,
-  "marginsKm": [1, 4, 12]
+  "marginsKm": [1, 4, 12],
+  "viaSnapM": 30
 }

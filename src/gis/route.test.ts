@@ -5,6 +5,8 @@ import {
   distanceM,
   emptySegment,
   insertVia,
+  nearestSegmentIndex,
+  pointToSegmentM,
   rebuildSegments,
   routeKm,
   routeLine,
@@ -182,5 +184,35 @@ describe('バス停から別のバス停までの乗車距離（停留所ごと�
     expect(km[2][1]).toBe(2)
     // B→C：1回目の B(1) から C(2) まで 1km
     expect(km[1][2]).toBe(1)
+  })
+})
+
+describe('点にいちばん近い区間', () => {
+  it('点から線分までの距離（線分の外側では端点までの距離）', () => {
+    const lat100m = 100 / 111_195 // 緯度で約100m
+    expect(pointToSegmentM([139.005, 35 + lat100m], [139.0, 35], [139.01, 35])).toBeCloseTo(100, 0)
+    // 線分の西端より外側（約456m 西）：端点までの距離
+    expect(pointToSegmentM([138.995, 35], [139.0, 35], [139.01, 35])).toBeCloseTo(
+      distanceM([138.995, 35], [139.0, 35]),
+      0,
+    )
+  })
+
+  it('経由点を置こうとした点に最も近い区間を選ぶ', () => {
+    const segs = rebuildSegments(['A', 'B', 'C'], false, []).segments
+    const route: Route = {
+      loop: false,
+      sequence: ['A', 'B', 'C'],
+      segments: segs,
+      lengthOverrideKm: null,
+    }
+    // A—B の真ん中の少し北／B—C の真ん中の少し北
+    expect(nearestSegmentIndex(route, [A, B, C], [139.005, 35.0005])?.index).toBe(0)
+    expect(nearestSegmentIndex(route, [A, B, C], [139.015, 35.0005])?.index).toBe(1)
+  })
+
+  it('区間がなければ null', () => {
+    const route: Route = { loop: false, sequence: ['A'], segments: [], lengthOverrideKm: null }
+    expect(nearestSegmentIndex(route, [A], [139, 35])).toBeNull()
   })
 })

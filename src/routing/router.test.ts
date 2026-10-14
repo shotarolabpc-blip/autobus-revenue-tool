@@ -98,3 +98,32 @@ describe('スナップ（最寄りの道路に寄せる）', () => {
     if (!r.found) expect(r.reason).toBe('no-road-near-start')
   })
 })
+
+describe('交差点への吸着（「この交差点を通ってほしい」）', () => {
+  it('近くの交差点（道路網のノード）に寄せ、寄せた距離を返す', async () => {
+    // 格子の交点 (139.02, 35.01) から東へ約20m
+    const p: LngLat = [139.02 + 0.00022, 35.01]
+    const r = await graph().snapNode(p, 30)
+    expect(r).not.toBeNull()
+    expect(r!.point).toEqual([139.02, 35.01])
+    expect(r!.distanceM).toBeGreaterThan(15)
+    expect(r!.distanceM).toBeLessThan(25)
+  })
+
+  it('いちばん近い交差点を選ぶ（交点どうしの間隔は約1.8km）', async () => {
+    const r = await graph().snapNode([139.039, 35.0099], 300)
+    expect(r!.point).toEqual([139.04, 35.01])
+  })
+
+  it('探索範囲に交差点がなければ null（道路の途中の点には吸着しない）', async () => {
+    // 交点 (139.02, 35.01) と (139.04, 35.01) の真ん中（約900m ずつ離れている）
+    expect(await graph().snapNode([139.03, 35.01], 30)).toBeNull()
+  })
+
+  it('タイルの境界（経度139.05）をまたいで、反対側のタイルの交差点にも寄せられる', async () => {
+    const r = await graph().snapNode([139.0499, 35.01], 1500)
+    expect(r!.point[0]).toBeCloseTo(139.04, 6)
+    const r2 = await graph().snapNode([139.0501, 35.01], 1500)
+    expect(r2!.point[0]).toBeCloseTo(139.06, 6)
+  })
+})

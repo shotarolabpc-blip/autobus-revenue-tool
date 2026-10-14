@@ -9,13 +9,13 @@ import {
 import { useEffect, useRef } from 'react'
 import { useNotice } from '../components/notice'
 import { useEditState } from './editState'
-import { circlePolygon, segmentLine, type LngLat } from '../gis/route'
+import { circlePolygon, nearestSegmentIndex, segmentLine, type LngLat } from '../gis/route'
 import { newId } from '../project/factory'
 import { addStop, addVia, addVisit, moveVia, removeVia, updateStop } from '../project/routeEdit'
 import type { Scenario } from '../project/schema'
 import { useProjectStore } from '../project/store'
 import { segmentKey, useRouteStatus } from '../project/useRouteComputation'
-import { snapToRoad, loadRoutingSettings } from '../routing/client'
+import { snapToRoad, loadRoutingSettings, placeViaPoint } from '../routing/client'
 
 const SRC_ROUTE = 'edit-route'
 const SRC_CATCH = 'edit-catchment'
@@ -47,6 +47,24 @@ async function snapStop(prefCode: string, p: LngLat): Promise<LngLat> {
     })
   }
   return snap.point
+}
+
+/**
+ * 経由点を置く位置を決める。近くの交差点があればそこへ吸着させ、なければ最寄りの道路上へ寄せる。
+ * 吸着の結果は、画面の下に短く表示する（交差点／道路上／近くに道路なし）。
+ */
+async function placeVia(prefCode: string, p: LngLat): Promise<LngLat> {
+  const r = await placeViaPoint(prefCode, p)
+  useEditState
+    .getState()
+    .setViaMessage(
+      r.kind === 'intersection'
+        ? `経由点を交差点に合わせました（${Math.round(r.distanceM)}m 移動）`
+        : r.kind === 'road'
+          ? `近くに交差点がないため、道路上に置きました（${Math.round(r.distanceM)}m 移動）`
+          : '近くに道路がないため、置いた位置のままにしました',
+    )
+  return r.point
 }
 
 /** 地図上のルート・バス停の編集（F-2-3〜F-2-8、F-2-5b） */
@@ -252,15 +270,16 @@ export function RouteEditor({ map, scenario, prefCode, defaultCatchmentM }: Prop
           update((sc) => removeVia(sc, i, k))
         })
         const m = new Marker({ element: el, draggable: true }).setLngLat(v).addTo(map)
-        m.on('dragend', () => {
+        m.on('dragend', async () => {
           const p = m.getLngLat()
-          update((sc) => moveVia(sc, i, k, [p.lng, p.lat]))
+          const snapped = await placeVia(prefCode, [p.lng, p.lat])
+          update((sc) => moveVia(sc, i, k, snapped))
         })
         markers.push(m)
       })
     })
     return () => markers.forEach((m) => m.remove())
-  }, [map, scenario.route.segments])
+  }, [map, scenario.route.segments, prefCode])
 
   // ルート線をドラッグして経由点を追加（F-2-5b）
   useEffect(() => {
@@ -294,7 +313,7 @@ export function RouteEditor({ map, scenario, prefCode, defaultCatchmentM }: Prop
         })
         if (last) {
           const p = last
-          update((sc) => addVia(sc, segIndex, p))
+          placeVia(prefCode, p).then((snapped) => update((sc) => addVia(sc, segIndex, snapped)))
         }
       }
       map.on('mousemove', move)
@@ -312,7 +331,29 @@ export function RouteEditor({ map, scenario, prefCode, defaultCatchmentM }: Prop
       map.off('mouseenter', HIT_LAYER, enter)
       map.off('mouseleave', HIT_LAYER, leave)
     }
-  }, [map])
+  }, [map, prefCode])
+
+  // 「経由点を追加」モード：地図をクリックした点に最も近い区間に、経由点を（交差点に寄せて）追加する
+  useEffect(() => {
+    if (mode !== 'addVia') return
+    map.getCanvas().style.cursor = 'crosshair'
+    const onClick = async (e: MapMouseEvent) => {
+      const sc = scenarioRef.current
+      const p: LngLat = [e.lngLat.lng, e.lngLat.lat]
+      const near = nearestSegmentIndex(sc.route, sc.stops, p)
+      if (!near) {
+        useEditState.getState().setViaMessage('先にバス停を2つ以上置いてください')
+        return
+      }
+      const snapped = await placeVia(prefCode, p)
+      update((s) => addVia(s, near.index, snapped))
+    }
+    map.on('click', onClick)
+    return () => {
+      map.off('click', onClick)
+      map.getCanvas().style.cursor = ''
+    }
+  }, [map, mode, prefCode])
 
   // 「バス停を追加」モード：既存バス停をクリックで採用（F-2-3）、地図をクリックで新規（F-2-4）
   useEffect(() => {

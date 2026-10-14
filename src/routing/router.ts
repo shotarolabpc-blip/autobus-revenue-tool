@@ -471,6 +471,35 @@ export class RoadGraph {
     return pos.length ? { point: pos[0].point, distanceM: pos[0].distanceM } : null
   }
 
+  /**
+   * 点を最寄りの交差点（道路網のノード。交差点・行き止まり・道路種別の変わり目）に寄せる。
+   * searchM 以内に交差点がなければ null。「この交差点を通ってほしい」という経由点の指定に使う。
+   */
+  async snapNode(p: LngLat, searchM: number): Promise<SnapResult | null> {
+    const dLat = searchM / 111_000 + 0.002
+    const dLng = dLat / Math.max(0.1, Math.cos(p[1] * RAD))
+    await this.ensureBounds(p[0] - dLng, p[1] - dLat, p[0] + dLng, p[1] + dLat)
+    const [x0, y0] = this.tileOf([p[0] - dLng, p[1] - dLat])
+    const [x1, y1] = this.tileOf([p[0] + dLng, p[1] + dLat])
+    let best: SnapResult | null = null
+    for (let x = x0; x <= x1; x++) {
+      for (let y = y0; y <= y1; y++) {
+        const t = this.tile(x, y)
+        if (!t) continue
+        for (let i = 0; i < t.coords.length / 2; i++) {
+          const c: LngLat = [t.coords[i * 2], t.coords[i * 2 + 1]]
+          // 粗い判定（緯度・経度の差が探索範囲を超えるものは飛ばす）
+          if (Math.abs(c[0] - p[0]) > dLng || Math.abs(c[1] - p[1]) > dLat) continue
+          const d = haversineM(p, c)
+          if (d <= searchM && (best === null || d < best.distanceM)) {
+            best = { point: c, distanceM: d }
+          }
+        }
+      }
+    }
+    return best
+  }
+
   /** 2点間の経路。必要な範囲のタイルを読み込み、見つからなければ範囲を広げて再試行する */
   async route(a: LngLat, b: LngLat, opt: RouteOptions): Promise<RouteResult> {
     let lastReason: RouteResult | null = null

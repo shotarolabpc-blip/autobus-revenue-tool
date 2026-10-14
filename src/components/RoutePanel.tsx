@@ -8,6 +8,7 @@ import {
   addStop,
   addVisit,
   moveStopOrder,
+  removeVia,
   removeVisit,
   setAllCatchments,
   setLoop,
@@ -67,6 +68,7 @@ function NumberInput({
 /** ルート・バス停の一覧と編集（F-2-3〜F-2-11） */
 export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVersions }: Props) {
   const mode = useEditState((s) => s.mode)
+  const viaMessage = useEditState((s) => s.viaMessage)
   const selected = useEditState((s) => s.selectedStopId)
   const statuses = useRouteStatus((s) => s.segments)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
@@ -144,16 +146,39 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
           type="button"
           className={`btn btn-small${mode === 'addStop' ? ' btn-primary' : ''}`}
           aria-pressed={mode === 'addStop'}
-          onClick={() => useEditState.getState().setMode(mode === 'addStop' ? 'view' : 'addStop')}
+          onClick={() => {
+            useEditState.getState().setViaMessage(null)
+            useEditState.getState().setMode(mode === 'addStop' ? 'view' : 'addStop')
+          }}
         >
           {mode === 'addStop' ? '追加を終える' : '＋ バス停を追加'}
+        </button>
+        <button
+          type="button"
+          className={`btn btn-small${mode === 'addVia' ? ' btn-primary' : ''}`}
+          aria-pressed={mode === 'addVia'}
+          disabled={scenario.route.segments.length === 0}
+          title={scenario.route.segments.length === 0 ? 'バス停を2つ以上置くと使えます' : undefined}
+          onClick={() => {
+            useEditState.getState().setViaMessage(null)
+            useEditState.getState().setMode(mode === 'addVia' ? 'view' : 'addVia')
+          }}
+        >
+          {mode === 'addVia' ? '経由点の追加を終える' : '＋ 経由点を追加'}
         </button>
       </div>
       <p className="panel-note">
         {mode === 'addStop'
           ? '地図をクリックすると新しいバス停を置きます。既存バス停（参照データ）をクリックすると、そのバス停を採用します。すでにルートにあるバス停（番号の丸）をクリックすると、停車順にもう一度加えます。'
-          : 'バス停の番号はドラッグで移動できます。ルートの線をドラッグすると経由点を追加できます（経由点はダブルクリックで削除）。'}
+          : mode === 'addVia'
+            ? '「この交差点を通ってほしい」場所を地図でクリックしてください。いちばん近い区間に経由点を加え、近くに交差点があればそこに合わせます（バス停にはなりません）。'
+            : 'バス停の番号はドラッグで移動できます。ルートの線をドラッグしても経由点を追加できます（経由点はダブルクリックまたは下の一覧の×で削除）。'}
       </p>
+      {viaMessage && (
+        <p className="panel-note" role="status">
+          {viaMessage}
+        </p>
+      )}
 
       <div className="field-inline">
         <span>運行形態</span>
@@ -314,6 +339,27 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
                       <p className="panel-note text-warning">{st.message}</p>
                     )}
                   </div>
+                )}
+                {seg && segIdx !== undefined && seg.via.length > 0 && (
+                  <ul className="via-list" aria-label={`区間${segIdx + 1}の経由点`}>
+                    {seg.via.map((v, k) => (
+                      <li key={`${k}-${v[0]}-${v[1]}`}>
+                        <span className="via-dot" aria-hidden="true" />
+                        経由点{k + 1}
+                        <small className="hint">
+                          （{v[1].toFixed(5)}, {v[0].toFixed(5)}）
+                        </small>
+                        <button
+                          type="button"
+                          className="btn-icon btn-danger"
+                          aria-label={`区間${segIdx + 1}の経由点${k + 1}を削除`}
+                          onClick={() => update((sc) => removeVia(sc, segIdx, k))}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             )

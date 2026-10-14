@@ -15,6 +15,7 @@ import {
 export type RouteRequest =
   | { type: 'route'; id: number; prefCode: string; from: LngLat; to: LngLat; options: RouteOptions }
   | { type: 'snap'; id: number; prefCode: string; point: LngLat; searchM: number }
+  | { type: 'snapNode'; id: number; prefCode: string; point: LngLat; searchM: number }
 
 export type RouteResponse =
   | { id: number; ok: true; result: RouteResult; elapsedMs: number; loadedTiles: number }
@@ -50,6 +51,15 @@ self.onmessage = async (ev: MessageEvent<RouteRequest>) => {
   try {
     const t0 = performance.now()
     const graph = await getGraph(prefCode)
+    if (req.type === 'snapNode') {
+      const res: RouteResponse = {
+        id,
+        ok: true,
+        snap: graph ? await graph.snapNode(req.point, req.searchM) : null,
+      }
+      self.postMessage(res)
+      return
+    }
     if (req.type === 'snap') {
       const res: RouteResponse = {
         id,

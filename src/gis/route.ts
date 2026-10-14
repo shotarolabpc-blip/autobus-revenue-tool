@@ -186,6 +186,46 @@ export function routeLine(route: Route, stops: Stop[]): LngLat[] {
   return out
 }
 
+/** 点 p から線分 a-b までの距離（m。局所的な平面近似） */
+export function pointToSegmentM(p: LngLat, a: LngLat, b: LngLat): number {
+  const k = Math.cos(p[1] * RAD)
+  const mPerLat = EARTH_R * RAD
+  const mPerLng = mPerLat * k
+  const ax = (a[0] - p[0]) * mPerLng
+  const ay = (a[1] - p[1]) * mPerLat
+  const bx = (b[0] - p[0]) * mPerLng
+  const by = (b[1] - p[1]) * mPerLat
+  const dx = bx - ax
+  const dy = by - ay
+  const len2 = dx * dx + dy * dy
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len2))
+  return Math.hypot(ax + dx * t, ay + dy * t)
+}
+
+/**
+ * 点にいちばん近い区間（ルートの線のどの区間か）。経由点を「この辺りを通る」と置いたとき、
+ * どの区間に入れるかを決めるのに使う。区間がなければ null。
+ */
+export function nearestSegmentIndex(
+  route: Route,
+  stops: Stop[],
+  p: LngLat,
+): { index: number; distanceM: number } | null {
+  const byId = new Map(stops.map((s) => [s.id, s]))
+  let best: { index: number; distanceM: number } | null = null
+  route.segments.forEach((seg, index) => {
+    const a = byId.get(seg.fromStopId)
+    const b = byId.get(seg.toStopId)
+    if (!a || !b) return
+    const line = segmentLine(seg, a, b)
+    for (let i = 0; i < line.length - 1; i++) {
+      const d = pointToSegmentM(p, line[i], line[i + 1])
+      if (best === null || d < best.distanceM) best = { index, distanceM: d }
+    }
+  })
+  return best
+}
+
 /** 区間の線のどこに経由点を入れるか：線上の位置の順に並べる（F-2-5b） */
 export function insertVia(seg: Segment, from: Stop, to: Stop, p: LngLat): LngLat[] {
   const pts = [stopPoint(from), ...seg.via, stopPoint(to)]

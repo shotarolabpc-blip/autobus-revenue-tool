@@ -137,8 +137,8 @@ export function ReferenceLayers({ map, prefectures, attributions, preferredYear 
       }
     }
     const onClick = (e: MapLayerMouseEvent) => {
-      // バス停の追加中は、クリックは「採用」に使うので吹き出しを出さない
-      if (useEditState.getState().mode === 'addStop') return
+      // 編集中は、クリックは編集の操作に使うので吹き出しを出さない
+      if (useEditState.getState().mode !== 'view') return
       const f = e.features?.[0]
       if (!f || f.geometry.type !== 'Point') return
       const p = f.properties as { name: string; operator: string; routes: string }

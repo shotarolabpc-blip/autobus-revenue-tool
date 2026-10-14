@@ -7,6 +7,8 @@ export const routingSettingsSchema = z.object({
   snapSearchM: z.number().positive(),
   /** これより遠くへ寄せたら警告する（m） */
   snapWarnM: z.number().positive(),
+  /** 経由点を、この距離以内の交差点に吸着させる（m） */
+  viaSnapM: z.number().positive(),
   marginsKm: z.array(z.number().positive()).min(1),
 })
 export type RoutingSettings = z.infer<typeof routingSettingsSchema>
@@ -70,4 +72,39 @@ export async function snapToRoad(prefCode: string, point: LngLat): Promise<SnapR
   })
   if (!res.ok) throw new Error(res.error)
   return 'snap' in res ? res.snap : null
+}
+
+/** 点を最寄りの交差点に寄せる（searchM 以内に交差点がなければ null） */
+export async function snapToIntersection(
+  prefCode: string,
+  point: LngLat,
+  searchM: number,
+): Promise<SnapResult | null> {
+  const id = nextId++
+  const req: RouteRequest = { type: 'snapNode', id, prefCode, point, searchM }
+  const res = await new Promise<RouteResponse>((resolve) => {
+    pending.set(id, resolve)
+    getWorker().postMessage(req)
+  })
+  if (!res.ok) throw new Error(res.error)
+  return 'snap' in res ? res.snap : null
+}
+
+export type ViaPlacement = {
+  point: LngLat
+  /** 交差点に吸着した／道路上に寄せた／そのまま（近くに道路がない） */
+  kind: 'intersection' | 'road' | 'free'
+  distanceM: number
+}
+
+/**
+ * 経由点を置く位置を決める：近くの交差点があればそこへ、なければ最寄りの道路上へ、道路がなければそのまま。
+ */
+export async function placeViaPoint(prefCode: string, p: LngLat): Promise<ViaPlacement> {
+  const s = await loadRoutingSettings()
+  const node = await snapToIntersection(prefCode, p, s.viaSnapM)
+  if (node) return { point: node.point, kind: 'intersection', distanceM: node.distanceM }
+  const road = await snapToRoad(prefCode, p)
+  if (road) return { point: road.point, kind: 'road', distanceM: road.distanceM }
+  return { point: p, kind: 'free', distanceM: 0 }
 }
