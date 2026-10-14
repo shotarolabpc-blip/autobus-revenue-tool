@@ -11,7 +11,7 @@ import { useNotice } from '../components/notice'
 import { useEditState } from './editState'
 import { circlePolygon, segmentLine, type LngLat } from '../gis/route'
 import { newId } from '../project/factory'
-import { addStop, addVia, moveVia, removeVia, updateStop } from '../project/routeEdit'
+import { addStop, addVia, addVisit, moveVia, removeVia, updateStop } from '../project/routeEdit'
 import type { Scenario } from '../project/schema'
 import { useProjectStore } from '../project/store'
 import { segmentKey, useRouteStatus } from '../project/useRouteComputation'
@@ -160,6 +160,7 @@ export function RouteEditor({ map, scenario, prefCode, defaultCatchmentM }: Prop
         `${SRC_CATCH}-line`,
         `${SRC_ROUTE}-casing`,
         SRC_ROUTE,
+        HIT_LAYER,
         SRC_DRAG,
       ]) {
         if (map.getLayer(id)) map.removeLayer(id)
@@ -208,11 +209,20 @@ export function RouteEditor({ map, scenario, prefCode, defaultCatchmentM }: Prop
       const el = document.createElement('button')
       el.type = 'button'
       el.className = `stop-marker${s.id === selected ? ' is-selected' : ''}${s.existingStopId ? ' is-existing' : ''}`
-      el.textContent = String(i + 1)
-      el.title = `${i + 1}. ${s.name}（ドラッグで移動）`
-      el.setAttribute('aria-label', `バス停 ${i + 1} ${s.name}`)
+      // 停車順の番号（同じバス停を何度も通る場合は「1・5」のように並べる）
+      const visits = scenario.route.sequence.flatMap((id, k) => (id === s.id ? [k + 1] : []))
+      const label = visits.length ? visits.join('・') : String(i + 1)
+      el.textContent = label
+      if (visits.length > 1) el.classList.add('is-multi')
+      el.title = `${label}. ${s.name}（ドラッグで移動）`
+      el.setAttribute('aria-label', `バス停 ${label} ${s.name}`)
       el.addEventListener('click', (e) => {
         e.stopPropagation()
+        // 「バス停を追加」中にルート上のバス停をクリックしたら、停車順にもう一度加える
+        if (useEditState.getState().mode === 'addStop') {
+          update((sc) => addVisit(sc, s.id))
+          return
+        }
         useEditState.getState().select(s.id)
       })
       const m = new Marker({ element: el, draggable: true }).setLngLat([s.lng, s.lat]).addTo(map)
@@ -227,7 +237,7 @@ export function RouteEditor({ map, scenario, prefCode, defaultCatchmentM }: Prop
     })
     return () => markers.forEach((m) => m.remove())
     // update は scenarioRef 経由で最新のシナリオを使う
-  }, [map, scenario.stops, selected, prefCode])
+  }, [map, scenario.stops, scenario.route.sequence, selected, prefCode])
 
   // 経由点のマーカー（ドラッグで移動、ダブルクリックで削除）
   useEffect(() => {

@@ -1,5 +1,6 @@
 import type { z } from 'zod'
 import { migrateToLatest, UnsupportedVersionError } from './migrations'
+import { segmentPairs } from '../gis/route'
 import { projectFileSchema, type ProjectFile } from './schema'
 
 export const PROJECT_FILE_EXTENSION = '.busproj.json'
@@ -22,6 +23,7 @@ const FIELD_LABELS: Record<string, string> = {
   dataVersions: 'データ版数',
   scenarios: 'シナリオ',
   stops: 'バス停',
+  sequence: '停車順',
   lat: '緯度',
   lng: '経度',
   existingStopId: '既存バス停ID',
@@ -176,11 +178,35 @@ export function checkIntegrity(p: ProjectFile): string[] {
     const stopIds = new Set(s.stops.map((x) => x.id))
     if (stopIds.size !== s.stops.length)
       errors.push(`シナリオ${i + 1}「${s.name}」：バス停のIDが重複しています`)
+    const where = `シナリオ${i + 1}「${s.name}」`
+    s.route.sequence.forEach((id, j) => {
+      if (!stopIds.has(id))
+        errors.push(`${where} › 停車順${j + 1}：存在しないバス停を参照しています`)
+    })
+    const inSequence = new Set(s.route.sequence)
+    for (const stop of s.stops) {
+      if (!inSequence.has(stop.id))
+        errors.push(`${where}：バス停「${stop.name}」が停車順にありません`)
+    }
     s.route.segments.forEach((seg, j) => {
       if (!stopIds.has(seg.fromStopId) || !stopIds.has(seg.toStopId)) {
-        errors.push(`シナリオ${i + 1}「${s.name}」› 区間${j + 1}：存在しないバス停を参照しています`)
+        errors.push(`${where} › 区間${j + 1}：存在しないバス停を参照しています`)
       }
     })
+    // 区間は、停車順の隣どうし（循環なら最後→最初も）と一致している必要がある
+    const pairs = segmentPairs(s.route.sequence, s.route.loop)
+    if (pairs.length !== s.route.segments.length) {
+      errors.push(
+        `${where}：区間の数（${s.route.segments.length}）が停車順から決まる数（${pairs.length}）と合いません`,
+      )
+    } else {
+      pairs.forEach(([a, b], j) => {
+        const seg = s.route.segments[j]
+        if (seg.fromStopId !== a || seg.toStopId !== b) {
+          errors.push(`${where} › 区間${j + 1}：停車順と出発・到着のバス停が合いません`)
+        }
+      })
+    }
   })
   return errors
 }

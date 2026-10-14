@@ -1,7 +1,14 @@
 import { withBom } from '../util/text'
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createProject, duplicateScenario, nextFiscalYear, type ProjectDefaults } from './factory'
+import {
+  createProject,
+  createScenario,
+  duplicateScenario,
+  nextFiscalYear,
+  type ProjectDefaults,
+} from './factory'
+import { addStop, addVisit, setLoop } from './routeEdit'
 import {
   checkIntegrity,
   describePath,
@@ -192,6 +199,97 @@ describe('移行（マイグレーション）', () => {
     expect(compareVersions('1.10', '1.9')).toBe(1)
     expect(compareVersions('1.0', '1')).toBe(0)
     expect(compareVersions('0.9', '1.0')).toBe(-1)
+  })
+})
+
+describe('移行 1.0 → 1.1（停車順の追加）', () => {
+  /** 1.0 形式のファイル：route に sequence がなく、stops の順が停車順 */
+  function v10Project() {
+    let s = createScenario('標準', defaults)
+    for (const [id, lng] of [
+      ['a', 139.0],
+      ['b', 139.01],
+      ['c', 139.02],
+    ] as const) {
+      s = addStop(s, { id, name: id, lat: 35, lng, existingStopId: null, catchmentM: 300 })
+    }
+    s = setLoop(s, true)
+    const p = { ...sample(), scenarios: [s] }
+    const old = JSON.parse(JSON.stringify(p))
+    old.schemaVersion = '1.0'
+    delete old.scenarios[0].route.sequence
+    return { current: p, old }
+  }
+
+  it('1.0 のファイルを読み込むと、停車順が stops の順で入り、ルートはそのまま', () => {
+    const { current, old } = v10Project()
+    const r = parseProjectFile(JSON.stringify(old))
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.migrated).toEqual(['1.0→1.1'])
+    expect(r.project.schemaVersion).toBe('1.1')
+    const route = r.project.scenarios[0].route
+    expect(route.sequence).toEqual(['a', 'b', 'c'])
+    expect(route.segments).toEqual(current.scenarios[0].route.segments)
+    expect(route.loop).toBe(true)
+  })
+
+  it('新しい形式で保存したファイルは、変換なしで読める', () => {
+    const { current } = v10Project()
+    const r = parseProjectFile(JSON.stringify(current))
+    expect(r.ok && r.migrated).toEqual([])
+  })
+
+  it('stops がないなど壊れた 1.0 のファイルでも、画面を壊さずエラーを返す', () => {
+    const r = parseProjectFile(
+      JSON.stringify({ schemaVersion: '1.0', scenarios: [{ route: {} }, null, 3] }),
+    )
+    expect(r.ok).toBe(false)
+  })
+})
+
+describe('停車順の整合チェック', () => {
+  const withRoute = () => {
+    let s = createScenario('標準', defaults)
+    for (const [id, lng] of [
+      ['a', 139.0],
+      ['b', 139.01],
+    ] as const) {
+      s = addStop(s, { id, name: id, lat: 35, lng, existingStopId: null, catchmentM: 300 })
+    }
+    return { ...sample(), scenarios: [s] }
+  }
+
+  it('同じバス停を何度も通る停車順を保存して読み込める', () => {
+    let s = withRoute().scenarios[0]
+    s = addVisit(s, 'a') // a,b,a
+    const r = parseProjectFile(JSON.stringify({ ...sample(), scenarios: [s] }))
+    expect(r.ok && r.project.scenarios[0].route.sequence).toEqual(['a', 'b', 'a'])
+  })
+
+  it('停車順に、存在しないバス停があるとエラー', () => {
+    const p = withRoute()
+    p.scenarios[0].route.sequence = ['a', 'zzz']
+    const r = parseProjectFile(JSON.stringify(p))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.errors.join()).toContain('停車順2：存在しないバス停')
+  })
+
+  it('停車順にないバス停（stops にだけある）があるとエラー', () => {
+    const p = withRoute()
+    p.scenarios[0].route.sequence = ['a']
+    p.scenarios[0].route.segments = []
+    const r = parseProjectFile(JSON.stringify(p))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.errors.join()).toContain('停車順にありません')
+  })
+
+  it('区間の数や並びが停車順と合わないとエラー', () => {
+    const p = withRoute()
+    p.scenarios[0].route.segments = []
+    const r = parseProjectFile(JSON.stringify(p))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.errors.join()).toContain('区間の数')
   })
 })
 

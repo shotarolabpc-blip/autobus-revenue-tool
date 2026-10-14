@@ -71,7 +71,7 @@ export function createScenario(name: string, defaults: ProjectDefaults): Scenari
     type: 'base',
     derivedFrom: null,
     stops: [],
-    route: { loop: false, segments: [], lengthOverrideKm: null },
+    route: { loop: false, sequence: [], segments: [], lengthOverrideKm: null },
     service: emptyService(defaults),
     fare: {
       system: '実施運賃',

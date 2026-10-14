@@ -1,4 +1,5 @@
 import { CURRENT_SCHEMA_VERSION } from '../schema'
+import { v1_0_to_v1_1 } from './v1_0_to_v1_1'
 
 /**
  * プロジェクトファイルの形式の変換（マイグレーション）。F-1-5。
@@ -18,8 +19,8 @@ export type Migration = {
   migrate: (data: RawProject) => RawProject
 }
 
-/** 登録済みの変換処理（今は 1.0 のみなので空） */
-export const migrations: Migration[] = []
+/** 登録済みの変換処理（版の順に並べる） */
+export const migrations: Migration[] = [v1_0_to_v1_1]
 
 export class UnsupportedVersionError extends Error {}
 

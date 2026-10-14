@@ -766,3 +766,10 @@ body {
 .fare-cell-empty {
   background: #f3f4f6;
 }
+
+/* 同じバス停を何度も通る場合の、複数の番号つきマーカー */
+.stop-marker.is-multi {
+  width: auto;
+  min-width: 24px;
+  padding: 0 6px;
+}

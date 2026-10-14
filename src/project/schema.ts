@@ -5,7 +5,7 @@ import { z } from 'zod'
  * 形式を変えたら CURRENT_SCHEMA_VERSION を上げ、src/project/migrations/ に変換処理を追加すること。
  * 計算結果と人口メッシュは保存しない（読込時に再計算する。F-1-10）。
  */
-export const CURRENT_SCHEMA_VERSION = '1.0'
+export const CURRENT_SCHEMA_VERSION = '1.1'
 
 /** 年齢階層（要件 5.1「最低 0-14／15-64／65-74／75歳以上」） */
 export const AGE_CLASSES = ['0-14', '15-64', '65-74', '75+'] as const
@@ -49,6 +49,12 @@ export const segmentSchema = z.object({
 export const routeSchema = z.object({
   /** true＝循環（最後のバス停から最初のバス停まで自動でつなぐ）、false＝往復（F-2-7） */
   loop: z.boolean(),
+  /**
+   * 停車順（バス停IDの並び）。同じバス停が何度出てもよい（ラケット型・8の字など、きれいな循環でないルート）。
+   * scenario.stops は、ここに出てくるバス停を「最初に出てきた順」に1つずつ並べたもの（schemaVersion 1.1 で追加）。
+   */
+  sequence: z.array(id),
+  /** segments[i] は sequence[i] → sequence[i+1]。循環なら最後の区間は sequence の最後 → 最初 */
   segments: z.array(segmentSchema),
   /** ルート総延長の手修正（km）。null なら区間の合計 */
   lengthOverrideKm: nonNegative.nullable(),

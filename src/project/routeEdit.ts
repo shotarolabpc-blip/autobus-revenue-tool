@@ -3,11 +3,13 @@
  * 自動（道路沿い）の区間は、変更すると線を空にし、画面側が経路計算をやり直す。
  */
 import {
+  collapseRepeats,
   lineLengthKm,
   rebuildSegments,
   segmentLine,
   stopPoint,
   insertVia as insertViaPoint,
+  uniqueInOrder,
   type LngLat,
 } from '../gis/route'
 import type { Scenario, Segment, Stop } from './schema'
@@ -22,36 +24,83 @@ function invalidate(seg: Segment, stops: Stop[]): Segment {
   return { ...seg, coordinates: line, lengthKm: lineLengthKm(line) }
 }
 
-function withStops(s: Scenario, stops: Stop[], loop = s.route.loop): Scenario {
-  const { segments, dirty } = rebuildSegments(stops, loop, s.route.segments)
-  const fixed = segments.map((seg, i) => (dirty.includes(i) ? invalidate(seg, stops) : seg))
-  return { ...s, stops, route: { ...s.route, loop, segments: fixed } }
+/**
+ * 停車順（sequence）を変えたあとの状態を作る。
+ * - 同じバス停が続けて並ばないようにする
+ * - scenario.stops は、停車順に出てくるバス停を「最初に出てきた順」に1つずつ並べたものにそろえる
+ *   （停車順に1度も出てこなくなったバス停は消える）
+ * - 区間を作り直し、新しくできた区間だけを再計算の対象にする
+ */
+function withSequence(
+  s: Scenario,
+  stops: Stop[],
+  sequence: string[],
+  loop = s.route.loop,
+): Scenario {
+  const byId = new Map(stops.map((x) => [x.id, x]))
+  const seq = collapseRepeats(sequence.filter((id) => byId.has(id)))
+  const nextStops = uniqueInOrder(seq).map((id) => byId.get(id)!)
+  const { segments, dirty } = rebuildSegments(seq, loop, s.route.segments)
+  const fixed = segments.map((seg, i) => (dirty.includes(i) ? invalidate(seg, nextStops) : seg))
+  return { ...s, stops: nextStops, route: { ...s.route, loop, sequence: seq, segments: fixed } }
 }
 
-export function addStop(s: Scenario, stop: Stop, index = s.stops.length): Scenario {
-  const stops = [...s.stops]
-  stops.splice(index, 0, stop)
-  return withStops(s, stops)
+/** 新しいバス停を停車順の index 番目（省略すると最後）に追加する */
+export function addStop(s: Scenario, stop: Stop, index = s.route.sequence.length): Scenario {
+  const seq = [...s.route.sequence]
+  seq.splice(index, 0, stop.id)
+  return withSequence(s, [...s.stops, stop], seq)
 }
 
-export function removeStop(s: Scenario, id: string): Scenario {
-  return withStops(
+/**
+ * すでに登録したバス停を、もう一度停車順に加える（ラケット型・8の字など、きれいな循環でないルート用）。
+ * 直前・直後と同じバス停になる場合は何もしない。
+ */
+export function addVisit(s: Scenario, stopId: string, index = s.route.sequence.length): Scenario {
+  if (!s.stops.some((x) => x.id === stopId)) return s
+  const seq = s.route.sequence
+  if (seq[index - 1] === stopId || seq[index] === stopId) return s
+  const next = [...seq]
+  next.splice(index, 0, stopId)
+  return withSequence(s, s.stops, next)
+}
+
+/** 停車順の index 番目の1回分だけを外す。どこにも出てこなくなったバス停は消える */
+export function removeVisit(s: Scenario, index: number): Scenario {
+  if (index < 0 || index >= s.route.sequence.length) return s
+  return withSequence(
     s,
-    s.stops.filter((x) => x.id !== id),
+    s.stops,
+    s.route.sequence.filter((_, i) => i !== index),
   )
 }
 
-/** バス停の並べ替え（F-2-5a）。影響する区間だけが再計算の対象になる */
+/** バス停を、停車順に出てくるすべての回から外して削除する */
+export function removeStop(s: Scenario, id: string): Scenario {
+  return withSequence(
+    s,
+    s.stops,
+    s.route.sequence.filter((x) => x !== id),
+  )
+}
+
+/** 停車順の並べ替え（F-2-5a）。影響する区間だけが再計算の対象になる */
 export function moveStopOrder(s: Scenario, from: number, to: number): Scenario {
-  if (from === to || from < 0 || to < 0 || from >= s.stops.length || to >= s.stops.length) return s
-  const stops = [...s.stops]
-  const [x] = stops.splice(from, 1)
-  stops.splice(to, 0, x)
-  return withStops(s, stops)
+  const n = s.route.sequence.length
+  if (from === to || from < 0 || to < 0 || from >= n || to >= n) return s
+  const seq = [...s.route.sequence]
+  const [x] = seq.splice(from, 1)
+  seq.splice(to, 0, x)
+  return withSequence(s, s.stops, seq)
+}
+
+/** 停車順をまるごと置き換える（取り込み用）。stops にないIDは無視する */
+export function setSequence(s: Scenario, sequence: string[]): Scenario {
+  return withSequence(s, s.stops, sequence)
 }
 
 export function setLoop(s: Scenario, loop: boolean): Scenario {
-  return withStops(s, s.stops, loop)
+  return withSequence(s, s.stops, s.route.sequence, loop)
 }
 
 export function updateStop(s: Scenario, id: string, patch: Partial<Omit<Stop, 'id'>>): Scenario {

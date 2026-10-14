@@ -6,6 +6,7 @@ import {
   effectiveFare,
   excludeTax,
   fareTable,
+  fareTableFromDistances,
   roundFare,
   sectionKm,
   type FareSettings,
@@ -131,5 +132,43 @@ describe('対キロ区間制の平均運賃', () => {
     const r = averageDistanceFare(table, [2, 1, 1], false, dist, null)
     expect(r.method).toBe('uniformAlighting')
     expect(r.fare).toBeCloseTo(217.5)
+  })
+})
+
+describe('運賃表（バス停間の距離の表から）', () => {
+  const dist: FareSettings = {
+    type: 'distance',
+    flatFare: 0,
+    baseFare: 150,
+    ratePerKm: 40,
+    rounding: 'ceil10',
+  }
+  // 同じバス停を通るルートで、いちばん短い乗車距離を使った距離の表（km）
+  const km = [
+    [0, 1, 3],
+    [2, 0, 1],
+    [1.5, 2.5, 0],
+  ]
+
+  it('距離の表から、乗車（行）→降車（列）の運賃を作る。向きによって距離（運賃）が違ってよい', () => {
+    const t = fareTableFromDistances(km, dist)
+    expect(t).toEqual([
+      [null, 190, 270], // 150+40×1=190、150+40×3=270
+      [230, null, 190], // 150+40×2=230
+      [210, 250, null], // 150+40×1.5=210、150+40×2.5=250
+    ])
+  })
+
+  it('均一制は距離に関係なく同じ運賃、手修正が優先', () => {
+    const flat: FareSettings = { ...dist, type: 'flat', flatFare: 200 }
+    const t = fareTableFromDistances(km, flat, new Map([['0-1', 180]]))
+    expect(t[0][1]).toBe(180)
+    expect(t[1][0]).toBe(200)
+  })
+
+  it('従来の fareTable と同じ結果になる（往復）', () => {
+    const stopKm = [0, 1.0, 2.5]
+    const m = stopKm.map((a) => stopKm.map((b) => Math.abs(a - b)))
+    expect(fareTableFromDistances(m, dist)).toEqual(fareTable(stopKm, false, 2.5, dist))
   })
 })

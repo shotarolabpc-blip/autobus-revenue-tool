@@ -6,11 +6,13 @@ import { useEditState } from '../map/editState'
 import { newId } from '../project/factory'
 import {
   addStop,
+  addVisit,
   moveStopOrder,
-  removeStop,
+  removeVisit,
   setAllCatchments,
   setLoop,
   setRouteLengthOverride,
+  setSequence,
   setSegmentLengthOverride,
   setSegmentMethod,
   updateStop,
@@ -76,7 +78,9 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
   const segKm = segmentKms(scenario.route, stops)
   const totalKm = routeKm({ ...scenario.route, lengthOverrideKm: null }, stops)
   const catchments = [...new Set(stops.map((s) => s.catchmentM))]
-  const segIndexFrom = new Map(scenario.route.segments.map((seg, i) => [seg.fromStopId, i]))
+  const sequence = scenario.route.sequence
+  const stopById = new Map(stops.map((x) => [x.id, x]))
+  const [revisitId, setRevisitId] = useState('')
 
   const exportFiles = (kind: 'geojson' | 'csv') => {
     const base = `${scenario.name}_ルート`
@@ -115,10 +119,18 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
       let next: Scenario = {
         ...s,
         stops: [],
-        route: { ...s.route, segments: [], lengthOverrideKm: null },
+        route: { ...s.route, sequence: [], segments: [], lengthOverrideKm: null },
       }
       if (r.loop !== null) next = setLoop(next, r.loop)
       for (const st of r.stops) next = addStop(next, { ...st, id: newId() })
+      // 停車順がファイルにあれば、同じバス停を何度も通る並びに置き換える
+      if (r.sequence) {
+        const ids = next.stops.map((x) => x.id)
+        next = setSequence(
+          next,
+          r.sequence.map((k) => ids[k - 1]),
+        )
+      }
       return next
     })
   }
@@ -139,7 +151,7 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
       </div>
       <p className="panel-note">
         {mode === 'addStop'
-          ? '地図をクリックすると新しいバス停を置きます。既存バス停（参照データ）をクリックすると、そのバス停を採用します。'
+          ? '地図をクリックすると新しいバス停を置きます。既存バス停（参照データ）をクリックすると、そのバス停を採用します。すでにルートにあるバス停（番号の丸）をクリックすると、停車順にもう一度加えます。'
           : 'バス停の番号はドラッグで移動できます。ルートの線をドラッグすると経由点を追加できます（経由点はダブルクリックで削除）。'}
       </p>
 
@@ -179,18 +191,21 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
       </div>
       <p className="panel-note">出典：{catchmentSource}</p>
 
-      {stops.length === 0 ? (
+      {sequence.length === 0 ? (
         <p className="panel-note">
           バス停がまだありません。「＋ バス停を追加」から置いてください。
         </p>
       ) : (
-        <ol className="stop-list">
-          {stops.map((s, i) => {
-            const segIdx = segIndexFrom.get(s.id)
+        <ol className="stop-list" aria-label="停車順">
+          {sequence.map((stopId, i) => {
+            const s = stopById.get(stopId)
+            if (!s) return null
+            const revisit = sequence.indexOf(stopId) < i
+            const segIdx = i < scenario.route.segments.length ? i : undefined
             const seg = segIdx !== undefined ? scenario.route.segments[segIdx] : undefined
             const st = seg ? statuses[segmentKey(seg.fromStopId, seg.toStopId)] : undefined
             return (
-              <li key={s.id}>
+              <li key={`${i}-${stopId}`}>
                 <div
                   className={`stop-row${s.id === selected ? ' is-selected' : ''}${dragIndex === i ? ' is-dragging' : ''}`}
                   draggable
@@ -214,10 +229,18 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
                   <span className="stop-no">{i + 1}</span>
                   <input
                     className="stop-name"
-                    aria-label={`バス停${i + 1}の名称`}
+                    aria-label={`停車${i + 1}のバス停の名称`}
                     value={s.name}
                     onChange={(e) => update((sc) => updateStop(sc, s.id, { name: e.target.value }))}
                   />
+                  {revisit && (
+                    <span
+                      className="badge"
+                      title="このバス停は、停車順に前にも出てきます（名称・位置は共通）"
+                    >
+                      再訪
+                    </span>
+                  )}
                   {s.existingStopId && (
                     <span className="badge" title={`既存バス停 ${s.existingStopId}`}>
                       既存
@@ -226,7 +249,7 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
                   <button
                     type="button"
                     className="btn-icon"
-                    aria-label={`バス停${i + 1}を上へ`}
+                    aria-label={`停車${i + 1}を上へ`}
                     disabled={i === 0}
                     onClick={() => update((sc) => moveStopOrder(sc, i, i - 1))}
                   >
@@ -235,8 +258,8 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
                   <button
                     type="button"
                     className="btn-icon"
-                    aria-label={`バス停${i + 1}を下へ`}
-                    disabled={i === stops.length - 1}
+                    aria-label={`停車${i + 1}を下へ`}
+                    disabled={i === sequence.length - 1}
                     onClick={() => update((sc) => moveStopOrder(sc, i, i + 1))}
                   >
                     ▼
@@ -244,11 +267,13 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
                   <button
                     type="button"
                     className="btn-icon btn-danger"
-                    aria-label={`バス停${i + 1}を削除`}
+                    aria-label={`停車${i + 1}を削除`}
                     onClick={() => {
-                      if (confirm(`バス停「${s.name}」を削除します。よろしいですか？`)) {
-                        update((sc) => removeStop(sc, s.id))
-                      }
+                      const onlyOnce = sequence.filter((x) => x === stopId).length === 1
+                      const msg = onlyOnce
+                        ? `バス停「${s.name}」を削除します。よろしいですか？`
+                        : `停車順の${i + 1}番目（バス停「${s.name}」）を外します。このバス停は、ほかの回では残ります。よろしいですか？`
+                      if (confirm(msg)) update((sc) => removeVisit(sc, i))
                     }}
                   >
                     ×
@@ -296,6 +321,34 @@ export function RoutePanel({ scenario, catchmentOptions, catchmentSource, dataVe
         </ol>
       )}
 
+      {stops.length >= 1 && (
+        <div className="field-inline" data-testid="revisit">
+          <span>もう一度通るバス停</span>
+          <select
+            aria-label="もう一度通るバス停"
+            value={revisitId}
+            onChange={(e) => setRevisitId(e.target.value)}
+          >
+            <option value="">（選択してください）</option>
+            {stops.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="btn btn-small"
+            disabled={!revisitId}
+            onClick={() => {
+              update((sc) => addVisit(sc, revisitId))
+              setRevisitId('')
+            }}
+          >
+            停車順の最後に加える
+          </button>
+        </div>
+      )}
       {stops.length >= 2 && (
         <div className="route-total">
           <div>

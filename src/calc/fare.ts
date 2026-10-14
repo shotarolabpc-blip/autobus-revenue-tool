@@ -61,18 +61,28 @@ export function fareTable(
   overrides: Map<string, number> = new Map(),
 ): (number | null)[][] {
   const n = stopKm.length
-  return Array.from({ length: n }, (_, i) =>
-    Array.from({ length: n }, (_, j) => {
+  const km = Array.from({ length: n }, (_, i) =>
+    Array.from({ length: n }, (_, j) => (i === j ? 0 : sectionKm(stopKm, i, j, loop, totalKm))),
+  )
+  return fareTableFromDistances(km, s, overrides)
+}
+
+/**
+ * 運賃表（距離の表から）。km[i][j] は、バス停 i から j までの乗車距離（km）。
+ * 同じバス停を何度も通るルートでは、gis/route.ts の stopToStopKm で作った表を渡す。
+ */
+export function fareTableFromDistances(
+  km: number[][],
+  s: FareSettings,
+  overrides: Map<string, number> = new Map(),
+): (number | null)[][] {
+  return km.map((row, i) =>
+    row.map((d, j) => {
       if (i === j) return null
       const o = overrides.get(`${i}-${j}`)
       if (o !== undefined) return o
       if (s.type === 'flat') return s.flatFare
-      return distanceFare(
-        sectionKm(stopKm, i, j, loop, totalKm),
-        s.baseFare,
-        s.ratePerKm,
-        s.rounding,
-      )
+      return distanceFare(d, s.baseFare, s.ratePerKm, s.rounding)
     }),
   )
 }

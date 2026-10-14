@@ -112,6 +112,7 @@
 | F-2-5g | （任意）利用者が**自分の openrouteservice APIキー**を入力した場合だけ、外部APIで経路を計算できる。キーはそのブラウザ内にだけ保存し、サイトやプロジェクトファイルには含めない | Phase2 |
 | F-2-5d | バス停の位置を道路上に自動で寄せる（スナップ）。寄せた距離が大きい場合は警告 | MVP |
 | F-2-5e | 循環ルートは最後のバス停から最初のバス停まで自動でつなぐ | MVP |
+| F-2-5h | **同じバス停を停車順に何度でも登録できる**（ラケット型・8の字など、きれいな循環でないルート）。バス停（場所・名称・勢圏）は1つのまま、「停車順」（`route.sequence`）に複数回出てくる。需要推計はバス停ごとに1回だけ数え、運賃表も停留所ごとに作る（同じバス停を何度も通る場合は最も短い乗車距離で計算） | MVP |
 | F-2-6 | ルート総延長・バス停間距離を自動算出（手修正可） | MVP |
 | F-2-7 | 循環ルート／往復ルートの指定 | MVP |
 | F-2-8 | 停留所勢圏（半径、初期値300m・変更可）の円表示 | MVP |
@@ -347,7 +348,7 @@ GitHub Pagesは**公開サイト1GBまで・帯域は月100GB（目安）**、1�
 
 ```jsonc
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "toolVersion": "0.1.0",
   "savedAt": "2026-10-05T17:00:00+09:00",
   "project": { "name": "", "municipality": "", "startFiscalYear": 2027, "years": 10 },
@@ -356,7 +357,7 @@ GitHub Pagesは**公開サイト1GBまで・帯域は月100GB（目安）**、1�
     {
       "id": "", "name": "標準", "type": "base",
       "stops":  [ { "id": "", "name": "", "lat": 0, "lng": 0, "order": 1, "existingStopId": null, "catchmentM": 300 } ],
-      "route":  { "geometry": { "type": "LineString", "coordinates": [] }, "lengthKm": 0, "loop": false, "routingMethod": "api|straight" },
+      "route":  { "loop": false, "sequence": ["バス停ID（同じIDが何度出てもよい）"], "segments": [ { "fromStopId": "", "toStopId": "", "method": "auto|straight|manual", "via": [], "coordinates": [], "lengthKm": 0, "lengthOverrideKm": null } ], "lengthOverrideKm": null },
       "service":{ "weekdayTrips": 0, "holidayTrips": 0, "weekdayDays": 0, "holidayDays": 0, "capacity": 0, "vehicles": 0, "avgSpeedKmh": 0 },
       "fare":   { "system": "実施運賃|協議運賃", "type": "flat|distance", "flatFare": 0, "baseFare": 0, "ratePerKm": 0, "rounding": "", "table": [], "categories": [ { "name": "", "share": 0, "discount": 0 } ] },
       "coefficients": { "byAge": { "0-14": {}, "15-64": {}, "65-74": {}, "75+": {} }, "rampUp": [], "fareElasticity": 0 },

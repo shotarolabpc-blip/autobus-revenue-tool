@@ -1,6 +1,6 @@
-import { checkCategories, effectiveFare, excludeTax, fareTable } from '../../calc/fare'
+import { checkCategories, effectiveFare, excludeTax, fareTableFromDistances } from '../../calc/fare'
 import type { DefaultsFile } from '../../data/schemas'
-import { stopDistancesKm } from '../../gis/route'
+import { positionDistancesKm, stopToStopKm } from '../../gis/route'
 import type { Fare, Scenario } from '../../project/schema'
 import { useProjectStore } from '../../project/store'
 import { fareSettings, overridesByIndex } from '../../calc/fareInputs'
@@ -25,10 +25,18 @@ export function FareSection({
       .getState()
       .updateScenario(scenario.id, (s) => ({ ...s, fare: { ...s.fare, ...patch } }))
 
-  const { stopKm, totalKm } = stopDistancesKm(scenario.route, scenario.stops)
+  // 運賃表は停留所ごと。同じ停留所を何度も通るルートでは、いちばん短い乗車距離で計算する
+  const { positionKm, totalKm } = positionDistancesKm(scenario.route, scenario.stops)
+  const distances = stopToStopKm(
+    scenario.route.sequence,
+    positionKm,
+    scenario.route.loop,
+    totalKm,
+    scenario.stops.map((x) => x.id),
+  )
   const overrides = overridesByIndex(scenario)
-  const table = fareTable(stopKm, scenario.route.loop, totalKm, fareSettings(f), overrides)
-  const auto = fareTable(stopKm, scenario.route.loop, totalKm, fareSettings(f))
+  const table = fareTableFromDistances(distances, fareSettings(f), overrides)
+  const auto = fareTableFromDistances(distances, fareSettings(f))
   const cat = checkCategories(f.categories)
   const n = scenario.stops.length
 

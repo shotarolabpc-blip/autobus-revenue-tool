@@ -3,6 +3,8 @@ import { createScenario } from './factory'
 import {
   addStop,
   addVia,
+  addVisit,
+  removeVisit,
   applyComputedSegment,
   moveStopOrder,
   pendingSegments,
@@ -108,5 +110,65 @@ describe('区間の引き方と経由点', () => {
     const moved = updateStop(s, 'B', { lng: 139.015 })
     const applied = applyComputedSegment(moved, { ...old.seg, via: [[1, 1]] }, old.points, 1)
     expect(applied).toBe(moved)
+  })
+})
+
+describe('同じバス停をもう一度通る（きれいな循環でないルート）', () => {
+  const key = (s: Scenario) => s.route.segments.map((x) => `${x.fromStopId}${x.toStopId}`)
+
+  it('登録済みのバス停を、停車順にもう一度加えられる。バス停の一覧（stops）は増えない', () => {
+    let s = setLoop(computeAll(threeStops()), true) // A,B,C（循環：C→A あり）
+    s = addVisit(s, 'B') // A,B,C,B
+    expect(s.route.sequence).toEqual(['A', 'B', 'C', 'B'])
+    expect(s.stops.map((x) => x.id)).toEqual(['A', 'B', 'C'])
+    // 区間：AB・BC は再利用、CB と、閉じる B→A が新しい
+    expect(key(s)).toEqual(['AB', 'BC', 'CB', 'BA'])
+    expect(pendingSegments(s).map((p) => p.index)).toEqual([2, 3])
+  })
+
+  it('直前と同じバス停は続けて加えない', () => {
+    const s = threeStops() // A,B,C
+    expect(addVisit(s, 'C')).toBe(s)
+    expect(addVisit(s, 'Z')).toBe(s) // 登録されていないバス停
+  })
+
+  it('途中に挿入できる（A,B,C → A,C,B,C）', () => {
+    const s = addVisit(threeStops(), 'C', 1)
+    expect(s.route.sequence).toEqual(['A', 'C', 'B', 'C'])
+  })
+
+  it('1回分だけ外すと、ほかの回は残る。どこにも出なくなったバス停は一覧からも消える', () => {
+    let s = addVisit(threeStops(), 'B') // A,B,C,B
+    s = removeVisit(s, 3)
+    expect(s.route.sequence).toEqual(['A', 'B', 'C'])
+    s = removeVisit(s, 2) // C を外す → C は一覧から消える
+    expect(s.route.sequence).toEqual(['A', 'B'])
+    expect(s.stops.map((x) => x.id)).toEqual(['A', 'B'])
+  })
+
+  it('外した結果、同じバス停が続けて並ぶ場合は1つにまとめる（A,B,A → B を外すと A）', () => {
+    let s = addVisit(threeStops(), 'A') // A,B,C,A
+    s = removeVisit(s, 2) // C を外す → A,B,A
+    expect(s.route.sequence).toEqual(['A', 'B', 'A'])
+    s = removeVisit(s, 1) // B を外す → A,A → A
+    expect(s.route.sequence).toEqual(['A'])
+  })
+
+  it('バス停を削除すると、停車順のすべての回から外れる', () => {
+    const s = removeStop(addVisit(threeStops(), 'B'), 'B') // A,B,C,B → A,C
+    expect(s.route.sequence).toEqual(['A', 'C'])
+  })
+
+  it('バス停を動かすと、そのバス停を通るすべての区間が再計算対象になる', () => {
+    let s = computeAll(addVisit(threeStops(), 'B')) // A,B,C,B：AB・BC・CB
+    s = updateStop(s, 'B', { lng: 139.015 })
+    expect(pendingSegments(s).map((p) => p.index)).toEqual([0, 1, 2])
+  })
+
+  it('並べ替えは停車順の位置で行う', () => {
+    const s = moveStopOrder(addVisit(threeStops(), 'B'), 3, 0) // A,B,C,B → B,A,B,C
+    expect(s.route.sequence).toEqual(['B', 'A', 'B', 'C'])
+    // stops は「最初に出てきた順」にそろう
+    expect(s.stops.map((x) => x.id)).toEqual(['B', 'A', 'C'])
   })
 })

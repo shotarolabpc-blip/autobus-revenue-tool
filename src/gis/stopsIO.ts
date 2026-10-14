@@ -39,7 +39,12 @@ export function routeToGeoJson(stops: Stop[], route: Route, meta: Record<string,
       })),
       {
         type: 'Feature' as const,
-        properties: { kind: 'route', loop: route.loop },
+        properties: {
+          kind: 'route',
+          loop: route.loop,
+          // 停車順（バス停の「order」の並び。同じバス停が何度出てもよい）
+          sequence: route.sequence.map((id) => stops.findIndex((s) => s.id === id) + 1),
+        },
         geometry: { type: 'LineString' as const, coordinates: routeLine(route, stops) },
       },
     ],
@@ -80,7 +85,14 @@ export function parseCsv(text: string): string[][] {
 
 export type ImportedStop = Omit<Stop, 'id'>
 export type ImportResult =
-  { ok: true; stops: ImportedStop[]; loop: boolean | null } | { ok: false; errors: string[] }
+  | {
+      ok: true
+      stops: ImportedStop[]
+      loop: boolean | null
+      /** 停車順（stops の何番目か。1始まり）。ファイルになければ null（バス停の並びが停車順） */
+      sequence: number[] | null
+    }
+  | { ok: false; errors: string[] }
 
 /** 取り込み（GeoJSON または CSV）。バス停の並びは「順番」（なければファイルの順） */
 export function importStops(
@@ -105,6 +117,7 @@ export function importStops(
     const feats = (gj as { features?: unknown[] }).features
     if (!Array.isArray(feats)) return { ok: false, errors: ['GeoJSON の features がありません'] }
     let loop: boolean | null = null
+    let sequence: number[] | null = null
     const items: { order: number; stop: ImportedStop }[] = []
     feats.forEach((f, idx) => {
       const g = (f as { geometry?: { type?: string; coordinates?: unknown } }).geometry
@@ -113,6 +126,9 @@ export function importStops(
         unknown
       >
       if (g?.type === 'LineString' && typeof p.loop === 'boolean') loop = p.loop
+      if (g?.type === 'LineString' && Array.isArray(p.sequence)) {
+        sequence = p.sequence.map(Number)
+      }
       if (g?.type !== 'Point') return
       const [lng, lat] = g.coordinates as number[]
       const where = `${items.length + 1}件目のバス停`
@@ -131,7 +147,13 @@ export function importStops(
     if (items.length === 0) errors.push('バス停（点）がありません')
     if (errors.length) return { ok: false, errors: errors.slice(0, 20) }
     items.sort((a, b) => a.order - b.order)
-    return { ok: true, stops: items.map((x) => x.stop), loop }
+    // 停車順は、取り込んだバス停の数の範囲に収まっているときだけ使う
+    const n = items.length
+    const validSequence =
+      sequence && (sequence as number[]).every((k) => Number.isInteger(k) && k >= 1 && k <= n)
+        ? (sequence as number[])
+        : null
+    return { ok: true, stops: items.map((x) => x.stop), loop, sequence: validSequence }
   }
   if (/\.csv$/i.test(fileName)) {
     const rows = parseCsv(text)
@@ -169,7 +191,7 @@ export function importStops(
     })
     if (errors.length) return { ok: false, errors: errors.slice(0, 20) }
     items.sort((a, b) => a.order - b.order)
-    return { ok: true, stops: items.map((x) => x.stop), loop: null }
+    return { ok: true, stops: items.map((x) => x.stop), loop: null, sequence: null }
   }
   return { ok: false, errors: ['GeoJSON（.geojson／.json）または CSV（.csv）を選んでください'] }
 }

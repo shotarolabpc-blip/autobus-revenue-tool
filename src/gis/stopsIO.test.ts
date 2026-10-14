@@ -10,6 +10,7 @@ const stops: Stop[] = [
 ]
 const route: Route = {
   loop: true,
+  sequence: ['a', 'b'],
   segments: [emptySegment('a', 'b', 'straight')],
   lengthOverrideKm: null,
 }
@@ -61,6 +62,28 @@ describe('GeoJSON', () => {
       expect(r.stops.map((s) => s.name)).toEqual(['駅前', '市役所, 北口'])
       expect(r.loop).toBe(true)
     }
+  })
+
+  it('同じバス停を何度も通る停車順も、書き出して読み込める', () => {
+    const racket: Route = {
+      loop: true,
+      sequence: ['a', 'b', 'a'],
+      segments: [],
+      lengthOverrideKm: null,
+    }
+    const gj = routeToGeoJson(stops, racket, {})
+    const line = gj.features.at(-1)!
+    expect(line.properties).toMatchObject({ sequence: [1, 2, 1] })
+    const r = importStops(JSON.stringify(gj), 'route.geojson', 300)
+    expect(r.ok && r.sequence).toEqual([1, 2, 1])
+  })
+
+  it('停車順がバス停の数の範囲に収まっていなければ使わない', () => {
+    const gj = routeToGeoJson(stops, route, {})
+    const bad = JSON.parse(JSON.stringify(gj))
+    bad.features.at(-1).properties.sequence = [1, 9]
+    const r = importStops(JSON.stringify(bad), 'route.geojson', 300)
+    expect(r.ok && r.sequence).toBeNull()
   })
 
   it('点がないGeoJSONはエラー', () => {
