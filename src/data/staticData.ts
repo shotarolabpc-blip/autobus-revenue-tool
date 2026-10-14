@@ -3,6 +3,8 @@ import {
   attributionsFileSchema,
   basemapsFileSchema,
   defaultsFileSchema,
+  fareReferencesFileSchema,
+  type FareReferencesFile,
   holidaysFileSchema,
   vehiclePresetsFileSchema,
   type HolidaysFile,
@@ -59,3 +61,6 @@ export const loadHolidays = (): Promise<HolidaysFile> => cached('holidays.json',
 
 export const loadVehiclePresets = (): Promise<VehiclePresetsFile> =>
   cached('vehicle_presets.json', vehiclePresetsFileSchema)
+
+export const loadFareReferences = (): Promise<FareReferencesFile> =>
+  cached('fare_references.json', fareReferencesFileSchema)

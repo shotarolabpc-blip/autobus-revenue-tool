@@ -5,7 +5,7 @@ import { z } from 'zod'
  * 形式を変えたら CURRENT_SCHEMA_VERSION を上げ、src/project/migrations/ に変換処理を追加すること。
  * 計算結果と人口メッシュは保存しない（読込時に再計算する。F-1-10）。
  */
-export const CURRENT_SCHEMA_VERSION = '1.1'
+export const CURRENT_SCHEMA_VERSION = '1.2'
 
 /** 年齢階層（要件 5.1「最低 0-14／15-64／65-74／75歳以上」） */
 export const AGE_CLASSES = ['0-14', '15-64', '65-74', '75+'] as const
@@ -131,6 +131,21 @@ export const fareSchema = z.object({
   categories: z.array(fareCategorySchema),
   /** 平均乗車距離（km、対キロ区間制の平均運賃算出に使う仮定値）。null なら自動 */
   avgRideKmOverride: nonNegative.nullable(),
+  /**
+   * 上限運賃（運行事業者が国から認可を受けた額。税込）。入力すると、運賃がこれを超えたときに警告し、
+   * 「高め」の運賃の目安に使う。null＝未入力（schemaVersion 1.2 で追加。F-4-8）
+   */
+  upperLimit: z
+    .object({
+      /** 均一制の上限（円） */
+      flatFare: nonNegative.nullable(),
+      /** 対キロ区間制：初乗り運賃の上限（円）・賃率の上限（円/km） */
+      baseFare: nonNegative.nullable(),
+      ratePerKm: nonNegative.nullable(),
+      /** 出典（事業者名・認可日・資料名など） */
+      source: z.string(),
+    })
+    .nullable(),
 })
 
 /** 係数の上書き。ユーザーが値と出典を入れたときだけ反映する（5.1A） */

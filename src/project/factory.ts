@@ -83,6 +83,7 @@ export function createScenario(name: string, defaults: ProjectDefaults): Scenari
       tableOverrides: [],
       categories: [{ name: '一般（割引なし）', share: 1, discount: 0 }],
       avgRideKmOverride: null,
+      upperLimit: null,
     },
     coefficients: {
       cityTypeOverride: null,

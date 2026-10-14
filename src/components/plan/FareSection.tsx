@@ -1,22 +1,28 @@
 import { checkCategories, effectiveFare, excludeTax, fareTableFromDistances } from '../../calc/fare'
-import type { DefaultsFile } from '../../data/schemas'
+import type { DefaultsFile, FareReferencesFile } from '../../data/schemas'
 import { positionDistancesKm, stopToStopKm } from '../../gis/route'
-import type { Fare, Scenario } from '../../project/schema'
+import type { Fare, ProjectFile, Scenario } from '../../project/schema'
 import { useProjectStore } from '../../project/store'
 import { fareSettings, overridesByIndex } from '../../calc/fareInputs'
 import { fmt } from '../../util/format'
+import { upperLimitWarnings } from '../../calc/fareSuggestion'
 import { NumField, Stat } from '../fields'
+import { FareSuggestionCard } from './FareSuggestionCard'
 
 /** 割引区分の名前の候補（F-4-6） */
 const CATEGORY_NAMES = ['小児', '高齢者', '障がい者', '定期券', '回数券', '無料パス']
 
 /** 運賃設計（F-4-1〜F-4-3、F-4-5、F-4-6） */
 export function FareSection({
+  project,
   scenario,
   defaults,
+  fareRefs,
 }: {
+  project: ProjectFile
   scenario: Scenario
   defaults: DefaultsFile
+  fareRefs: FareReferencesFile
 }) {
   const f = scenario.fare
   const tax = defaults.items.consumptionTaxRate
@@ -135,10 +141,17 @@ export function FareSection({
             />
           </div>
         )}
+        {upperLimitWarnings(f, f.upperLimit).map((w) => (
+          <p key={w} className="text-warning" role="alert">
+            ⚠ {w}
+          </p>
+        ))}
         <p className="hint">
           運賃は税込で入力します。税抜換算は {tax.source} による（税率 {tax.value * 100}%）。
         </p>
       </div>
+
+      <FareSuggestionCard project={project} scenario={scenario} fareRefs={fareRefs} />
 
       <div className="card">
         <h3>運賃表（F-4-5）</h3>

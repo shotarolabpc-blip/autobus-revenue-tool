@@ -799,3 +799,43 @@ body {
   border: 3px solid #1f6feb;
   border-radius: 999px;
 }
+
+/* 運賃の目安 */
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.suggestion-standard {
+  background: #f0f9ff;
+}
+
+.suggestion-high {
+  background: #fff7ed;
+}
+
+.suggestion-title {
+  font-weight: 700;
+}
+
+.suggestion-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.suggestion-refs ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+  font-size: 0.8rem;
+}

@@ -202,7 +202,7 @@ describe('移行（マイグレーション）', () => {
   })
 })
 
-describe('移行 1.0 → 1.1（停車順の追加）', () => {
+describe('移行 1.0 → 1.1（停車順の追加）→ 1.2（上限運賃の追加）', () => {
   /** 1.0 形式のファイル：route に sequence がなく、stops の順が停車順 */
   function v10Project() {
     let s = createScenario('標準', defaults)
@@ -218,6 +218,7 @@ describe('移行 1.0 → 1.1（停車順の追加）', () => {
     const old = JSON.parse(JSON.stringify(p))
     old.schemaVersion = '1.0'
     delete old.scenarios[0].route.sequence
+    delete old.scenarios[0].fare.upperLimit
     return { current: p, old }
   }
 
@@ -226,12 +227,40 @@ describe('移行 1.0 → 1.1（停車順の追加）', () => {
     const r = parseProjectFile(JSON.stringify(old))
     expect(r.ok).toBe(true)
     if (!r.ok) return
-    expect(r.migrated).toEqual(['1.0→1.1'])
-    expect(r.project.schemaVersion).toBe('1.1')
+    expect(r.migrated).toEqual(['1.0→1.1', '1.1→1.2'])
+    expect(r.project.schemaVersion).toBe('1.2')
     const route = r.project.scenarios[0].route
     expect(route.sequence).toEqual(['a', 'b', 'c'])
     expect(route.segments).toEqual(current.scenarios[0].route.segments)
     expect(route.loop).toBe(true)
+  })
+
+  it('1.1 のファイル（停車順あり・上限運賃なし）を読み込むと、上限運賃が未入力（null）になる', () => {
+    const { current } = v10Project()
+    const v11 = JSON.parse(JSON.stringify(current))
+    v11.schemaVersion = '1.1'
+    delete v11.scenarios[0].fare.upperLimit
+    const r = parseProjectFile(JSON.stringify(v11))
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.migrated).toEqual(['1.1→1.2'])
+    expect(r.project.scenarios[0].fare.upperLimit).toBeNull()
+    // 停車順などほかの項目はそのまま
+    expect(r.project.scenarios[0].route.sequence).toEqual(['a', 'b', 'c'])
+  })
+
+  it('入力した上限運賃は、保存して読み込むとそのまま戻る', () => {
+    const { current } = v10Project()
+    current.scenarios[0].fare.upperLimit = {
+      flatFare: 230,
+      baseFare: null,
+      ratePerKm: null,
+      source: '○○バス 令和7年認可',
+    }
+    const r = parseProjectFile(JSON.stringify(current))
+    expect(r.ok && r.project.scenarios[0].fare.upperLimit).toEqual(
+      current.scenarios[0].fare.upperLimit,
+    )
   })
 
   it('新しい形式で保存したファイルは、変換なしで読める', () => {

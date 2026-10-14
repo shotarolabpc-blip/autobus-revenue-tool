@@ -149,3 +149,33 @@ export const vehiclePresetsFileSchema = z.object({
   ),
 })
 export type VehiclePresetsFile = z.infer<typeof vehiclePresetsFileSchema>
+
+/** 運賃の参考データ（public/data/fare_references.json）。各値に出典を持つ */
+export const fareReferenceSchema = z.object({
+  id: z.string(),
+  kind: z.enum(['market', 'upperLimit']),
+  prefCode: z.string().regex(/^\d{2}$/),
+  cityCodes: z.array(z.string().regex(/^\d{5}$/)).nullable(),
+  operator: z.string(),
+  fareType: z.enum(['flat', 'distance']),
+  flatFare: z.number().nullable(),
+  baseFare: z.number().nullable(),
+  ratePerKm: z.number().nullable(),
+  source: z.object({
+    title: z.string(),
+    url: z.url(),
+    checkedAt: z.string(),
+    quote: z.string().optional(),
+  }),
+  note: z.string().optional(),
+})
+
+export const fareReferencesFileSchema = z.object({
+  checkedAt: z.string(),
+  /** 注意書き（画面に表示する） */
+  notice: z.string(),
+  /** 調べたが公式資料で確認できなかった項目（空欄のまま） */
+  notFound: z.array(z.string()),
+  items: z.array(fareReferenceSchema),
+})
+export type FareReferencesFile = z.infer<typeof fareReferencesFileSchema>

@@ -16,3 +16,4 @@ public/data/attributions.json
 public/data/holidays.json
 public/data/coefficients.json
 src/routing/__fixtures__
+public/data/fare_references.json

@@ -1,0 +1,555 @@
+{
+  "checkedAt": "2026-10-14",
+  "notice": "運賃の参考データは、事業者・自治体・国土交通省（関東運輸局）の公式資料から確認できたものだけを載せています。「相場」は確認日時点で資料に載っていた実施運賃で、その後に改定されている場合があります。「上限運賃」は事業者ごとに認可された額で、実施運賃とは別です。実際の運賃は、運行事業者・自治体・協議会と調整して決めてください。",
+  "notFound": [
+    "東急バスの都内の運賃（2025年10月の改定後）",
+    "三鷹市・調布市・日野市などのコミュニティバスの運賃（調べていません）",
+    "羽田イノベーションシティの自動運転バスの運賃（公式資料に記載なし。運行は休止中）",
+    "対キロ区間制の「相場」（初乗り運賃と賃率の両方を確認できた実施運賃がないため、対キロ区間制の「標準」は提案できません）",
+    "乗合バスの「標準的な運賃」（国土交通省の公示はタクシー・トラック・貸切バスのみで、乗合バスにはありません）",
+    "足立区の自動運転バス（大人230円・小児120円）は計画段階のため、参考にしていません"
+  ],
+  "items": [
+    {
+      "id": "toei-23ku",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
+      ],
+      "operator": "東京都交通局（都営バス）一般系統",
+      "fareType": "flat",
+      "flatFare": 210,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "東京都交通局 バス 普通運賃（東京都オープンデータ）",
+        "url": "https://www.opendata.metro.tokyo.lg.jp/kotsu/bus_fare_ordinary_fare.csv",
+        "checkedAt": "2026-10-14",
+        "quote": "一般系統,210円（IC 210円）,110円（IC 105円）"
+      },
+      "note": "23区内は均一運賃（小児110円）"
+    },
+    {
+      "id": "kokusai-kogyo",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "国際興業バス（東京都内）",
+      "fareType": "flat",
+      "flatFare": 230,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "国際興業 運賃改定のお知らせ（2023年11月1日実施）",
+        "url": "https://kokusaikogyo.co.jp/cmswp/wp-content/uploads/2024/11/727_ext_01_0.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "2023-11-01 の改定後の運賃（その後の改定は未確認）"
+    },
+    {
+      "id": "kanto-bus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "関東バス（都内均一）",
+      "fareType": "flat",
+      "flatFare": 230,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 関東バス 乗合バス運賃の認可・届出（2024-03-01）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000316336.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "2024-03-01 の改定後の運賃（その後の改定は未確認）"
+    },
+    {
+      "id": "tokyu-bus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "東急バス（都内・横浜均一）",
+      "fareType": "flat",
+      "flatFare": 230,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 東急バス 乗合バス運賃の認可・届出（2024-03-24）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000318588.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "2024-03-24 の改定後の運賃。2025年10月以降の都内の運賃は未確認"
+    },
+    {
+      "id": "seibu-bus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "西武バス（都内均一）",
+      "fareType": "flat",
+      "flatFare": 230,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 西武バス 乗合バス運賃の認可・届出（2025-06-01）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000348521.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "2025-06-01 の改定後の運賃（その後の改定は未確認）"
+    },
+    {
+      "id": "odakyu-bus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "小田急バス（都内・横浜均一）",
+      "fareType": "flat",
+      "flatFare": 240,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 小田急バス 乗合バス運賃の認可・届出（2024-06-01）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000324474.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "2024-06-01 の改定後の運賃（その後の改定は未確認）"
+    },
+    {
+      "id": "tobu-bus-central",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
+      ],
+      "operator": "東武バスセントラル（特別区均一）",
+      "fareType": "flat",
+      "flatFare": 250,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "東武バス 運賃改定のお知らせ（2025-08-02）",
+        "url": "https://www.tobu-bus.com/pc/topics/detail.html?key=21",
+        "checkedAt": "2026-10-14",
+        "quote": "東京都内の均一運賃を２３０円→２５０円に変更"
+      }
+    },
+    {
+      "id": "keio-bus-23ku",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
+      ],
+      "operator": "京王バス（都区内）",
+      "fareType": "flat",
+      "flatFare": 230,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "京王バス 運賃のご案内",
+        "url": "https://www.keio-bus.com/bus/fare/index.html",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "掲載ページに更新日の記載なし。小児は現金120円・IC115円"
+    },
+    {
+      "id": "kita-kbus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13117"
+      ],
+      "operator": "北区 K-バス",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "北区 K-バス 運賃",
+        "url": "https://www.city.kita.lg.jp/living/transport/1002525/1002526.html",
+        "checkedAt": "2026-10-14",
+        "quote": "料金100円（一律）"
+      }
+    },
+    {
+      "id": "taito-megurin",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13106"
+      ],
+      "operator": "台東区 めぐりん",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "台東区 めぐりん 運賃",
+        "url": "https://www.city.taito.lg.jp/kenchiku/kotsu/megurin/gaiyou/ryoukin/index.html",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "大人・小児とも100円。ページに更新日の記載なし"
+    },
+    {
+      "id": "sumida-hyakkei",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13107"
+      ],
+      "operator": "墨田区 すみだ百景",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "墨田区 すみだ百景 運賃",
+        "url": "https://www.city.sumida.lg.jp/kurashi/jyunkanbus/gaiyou/unchin.html",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "大人（中学生以上）100円・小学生50円。基本運賃を200円に改定予定（令和9年度以降）"
+    },
+    {
+      "id": "bunkyo-bgru",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13105"
+      ],
+      "operator": "文京区 B-ぐる",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "文京区 B-ぐる 運賃",
+        "url": "https://www.city.bunkyo.lg.jp/b011/p001060.html",
+        "checkedAt": "2026-10-14",
+        "quote": "大人 こども 各100円"
+      }
+    },
+    {
+      "id": "minato-chiibus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13103"
+      ],
+      "operator": "港区 ちぃばす",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "港区 ちぃばす 運賃",
+        "url": "https://www.city.minato.tokyo.jp/koutsuutaisaku/kankyo-machi/kotsu/bus/unchin.html",
+        "checkedAt": "2026-10-14",
+        "quote": "路線を乗り継ぐ場合は、それぞれの路線で100円です。"
+      },
+      "note": "小学生以上100円"
+    },
+    {
+      "id": "shibuya-hachiko",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13113"
+      ],
+      "operator": "渋谷区 ハチ公バス",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "渋谷区 ハチ公バス について",
+        "url": "https://www.city.shibuya.tokyo.jp/kurashi/kotsu/hachiko/hachiko_about.html",
+        "checkedAt": "2026-10-14",
+        "quote": "大人・子供同額1乗車“ワンコイン”の100円"
+      }
+    },
+    {
+      "id": "musashino-mubus",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13203"
+      ],
+      "operator": "武蔵野市 ムーバス",
+      "fareType": "flat",
+      "flatFare": 100,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "武蔵野市 ムーバス 運賃",
+        "url": "https://www.city.musashino.lg.jp/kurashi_tetsuzuki/bus_churin_chusha_kotsuanzen/mubus/1005137.html",
+        "checkedAt": "2026-10-14",
+        "quote": "100円(未就学児は無料)"
+      }
+    },
+    {
+      "id": "keio-nishishinjuku-autonomous",
+      "kind": "market",
+      "prefCode": "13",
+      "cityCodes": [
+        "13104"
+      ],
+      "operator": "京王バス 西新宿の自動運転バス（レベル2）",
+      "fareType": "flat",
+      "flatFare": 190,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "京王バス 自動運転バス",
+        "url": "https://www.keio-bus.com/jidounten/",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "大人190円（IC）・小児95円（IC）。ページに更新日の記載なし"
+    },
+    {
+      "id": "limit-kokusai-kogyo",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "国際興業バス（東京都内・均一）",
+      "fareType": "flat",
+      "flatFare": 240,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "国際興業 運賃改定のお知らせ（認可 2023-10-03）",
+        "url": "https://kokusaikogyo.co.jp/cmswp/wp-content/uploads/2024/11/727_ext_01_0.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "認可日 2023-10-03"
+    },
+    {
+      "id": "limit-kanto-bus",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "関東バス（都内均一）",
+      "fareType": "flat",
+      "flatFare": 240,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 関東バス 乗合バス運賃の認可（2024-03-01 実施）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000316336.pdf",
+        "checkedAt": "2026-10-14",
+        "quote": "均一制：240 円"
+      }
+    },
+    {
+      "id": "limit-tokyu-bus",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "東急バス（都内・横浜均一）",
+      "fareType": "flat",
+      "flatFare": 250,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 東急バス 乗合バス運賃の認可（2024-03-24 実施）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000318588.pdf",
+        "checkedAt": "2026-10-14",
+        "quote": "均一制：250 円"
+      }
+    },
+    {
+      "id": "limit-seibu-bus",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "西武バス（都内均一）",
+      "fareType": "flat",
+      "flatFare": 250,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 西武バス 乗合バス運賃の認可（2025-06-01 実施）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000348521.pdf",
+        "checkedAt": "2026-10-14",
+        "quote": "均一制：250 円"
+      }
+    },
+    {
+      "id": "limit-odakyu-bus",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "小田急バス（都内・横浜均一）",
+      "fareType": "flat",
+      "flatFare": 250,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 小田急バス 乗合バス運賃の認可（2024-06-01 実施）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000324474.pdf",
+        "checkedAt": "2026-10-14",
+        "quote": "均一制：250 円"
+      }
+    },
+    {
+      "id": "limit-keio-bus",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "京王バス（都内〈京浜〉均一）",
+      "fareType": "flat",
+      "flatFare": 240,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "国土交通省 京王電鉄バス 乗合バス運賃の上限運賃の認可（2023-03-10）",
+        "url": "https://www.mlit.go.jp/report/press/jidosha03_hh_000379.html",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "認可日 2023-03-10"
+    },
+    {
+      "id": "limit-tobu-bus-central",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": [
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
+      ],
+      "operator": "東武バスセントラル（特別区均一）",
+      "fareType": "flat",
+      "flatFare": 240,
+      "baseFare": null,
+      "ratePerKm": null,
+      "source": {
+        "title": "関東運輸局 東武バスセントラル 乗合バス運賃の認可（2023-06-13）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000297473.pdf",
+        "checkedAt": "2026-10-14"
+      },
+      "note": "認可日 2023-06-13。2025年の改定後の上限は未確認"
+    },
+    {
+      "id": "limit-keio-bus-tama",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "京王バス（多摩・対キロ区間制）",
+      "fareType": "distance",
+      "flatFare": null,
+      "baseFare": 230,
+      "ratePerKm": 46.1,
+      "source": {
+        "title": "関東運輸局 京王バス 乗合バス運賃の認可（2023-08-10）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000301179.pdf",
+        "checkedAt": "2026-10-14",
+        "quote": "対キロ区間制運賃：初乗運賃 230 円、基準賃率 46 円 10 銭"
+      },
+      "note": "多摩地域の路線。実施運賃は初乗り200円（2023-09-16 から）"
+    },
+    {
+      "id": "limit-seibu-bus-tama",
+      "kind": "upperLimit",
+      "prefCode": "13",
+      "cityCodes": null,
+      "operator": "西武バス（多摩・対キロ区間制）",
+      "fareType": "distance",
+      "flatFare": null,
+      "baseFare": 240,
+      "ratePerKm": 35.0,
+      "source": {
+        "title": "関東運輸局 西武バス 乗合バス運賃の認可（2026-04-28）",
+        "url": "https://wwwtb.mlit.go.jp/kanto/content/000372251.pdf",
+        "checkedAt": "2026-10-14",
+        "quote": "初乗運賃 240 円、基準賃率 35 円 00 銭"
+      },
+      "note": "実施運賃は初乗り200円（2026-07-01 から）"
+    }
+  ]
+}

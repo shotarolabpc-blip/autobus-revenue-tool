@@ -2,11 +2,17 @@ import { Link } from 'react-router'
 import { FareSection } from '../components/plan/FareSection'
 import { ServiceSection } from '../components/plan/ServiceSection'
 import { toHolidayData } from '../data/holidays'
-import { loadDefaults, loadHolidays, loadVehiclePresets } from '../data/staticData'
+import {
+  loadDefaults,
+  loadFareReferences,
+  loadHolidays,
+  loadVehiclePresets,
+} from '../data/staticData'
 import { useAsync } from '../data/useAsync'
 import { useActiveScenario, useProjectStore } from '../project/store'
 
-const loadAll = () => Promise.all([loadDefaults(), loadHolidays(), loadVehiclePresets()])
+const loadAll = () =>
+  Promise.all([loadDefaults(), loadHolidays(), loadVehiclePresets(), loadFareReferences()])
 
 /** 運行計画・車両・運賃の入力（F-3、F-3A、F-4） */
 export function PlanPage() {
@@ -26,7 +32,7 @@ export function PlanPage() {
   }
   if (state.status === 'loading') return <p className="page-message">読み込み中…</p>
   if (state.status === 'error') return <p className="page-message error">{state.error.message}</p>
-  const [defaults, holidays, presets] = state.data
+  const [defaults, holidays, presets, fareRefs] = state.data
 
   return (
     <section className="page page-narrow" aria-label="運行・運賃">
@@ -39,7 +45,7 @@ export function PlanPage() {
         holidayData={toHolidayData(holidays)}
         defaults={defaults}
       />
-      <FareSection scenario={scenario} defaults={defaults} />
+      <FareSection project={project} scenario={scenario} defaults={defaults} fareRefs={fareRefs} />
     </section>
   )
 }
