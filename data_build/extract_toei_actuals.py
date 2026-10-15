@@ -21,19 +21,56 @@ from __future__ import annotations
 
 import csv
 import re
+from dataclasses import dataclass
 from datetime import date
-from pathlib import Path
 
 import pdfplumber
 
 from common import DATA_RAW, download, setup_console
 
-PDF_URL = "https://www.opendata.metro.tokyo.lg.jp/kotsu/about/about_r05_closing_r05_closing05.pdf"
-PDF_PATH = DATA_RAW / "reference" / "toei" / "r05_bus.pdf"
+REF_DIR = DATA_RAW / "reference" / "toei"
 OUT = DATA_RAW / "reference" / "actuals.csv"
+SOURCE_PAGE = "https://www.kotsu.metro.tokyo.jp/about/information/closing/{code}_closing.html"
+OPENDATA_PDF = "https://www.opendata.metro.tokyo.lg.jp/kotsu/about/about_r05_closing_r05_closing05.pdf"
 
-FISCAL_YEAR = 2023  # 令和5年度
-SOURCE_NAME = "東京都交通局 令和5年度 バス系統別収支状況（東京都オープンデータ「決算 参考」）"
+
+@dataclass
+class Source:
+    """取り込む年度のPDF。file は data_raw/reference/toei/ に置いたファイル名、year は西暦の年度"""
+
+    file: str
+    year: int
+    name: str
+    url: str
+    download_url: str | None = None  # プログラムで取得できる場合だけ
+
+
+SOURCES = [
+    Source(
+        "r05_bus.pdf",
+        2023,
+        "東京都交通局 令和5年度 バス系統別収支状況（東京都オープンデータ「決算 参考」）",
+        OPENDATA_PDF,
+        OPENDATA_PDF,
+    ),
+    # 令和6・7年度は、東京都オープンデータの窓口にまだなく、東京都交通局のサイト（プログラムからの取得は拒否される）で公開。
+    # 利用者がブラウザで取得して置いたPDFを使う。TODO(根拠未確定)：PDFの正確なURLと利用条件を確認する
+    Source(
+        "r06_closing05.pdf",
+        2024,
+        "東京都交通局 令和6年度 バス系統別収支状況（決算の公表ページに掲載のPDF）",
+        SOURCE_PAGE.format(code="r06"),
+    ),
+    Source(
+        "r07_closing05.pdf",
+        2025,
+        "東京都交通局 令和7年度 バス系統別収支状況（決算の公表ページに掲載のPDF）",
+        SOURCE_PAGE.format(code="r07"),
+    ),
+]
+
+_DIGITS = str.maketrans("０１２３４５６７８９", "0123456789")
+HEADER = re.compile(r"令和([０-９0-9]+)年度")
 
 NUM = r"-?[\d,]+"
 ROW = re.compile(rf"^(\d+) (\S+) (.+) ({NUM}) ({NUM}) ({NUM}) ({NUM}) ({NUM}) (\d+)$")
@@ -88,37 +125,65 @@ def parse_lines(lines: list[str]) -> tuple[list[dict], list[str]]:
     return rows, problems
 
 
-def main() -> None:
-    setup_console()
-    download(PDF_URL, PDF_PATH)
+def pdf_lines(path) -> list[str]:
     lines: list[str] = []
-    with pdfplumber.open(PDF_PATH) as pdf:
+    with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
             lines += (page.extract_text() or "").splitlines()
-    rows, problems = parse_lines(lines)
-    if problems:
-        raise SystemExit("検算が合わないため、CSVを作りません:\n  " + "\n  ".join(problems))
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(COLUMNS)
+    return lines
+
+
+def check_year(lines: list[str], year: int) -> str | None:
+    """PDFの見出し（令和N年度）が、取り込む年度と一致するか。違えば理由を返す"""
+    for line in lines[:5]:
+        m = HEADER.search(line)
+        if m:
+            reiwa = int(m.group(1).translate(_DIGITS))
+            return None if 2018 + reiwa == year else f"見出しは令和{reiwa}年度（{2018 + reiwa}年度）で、{year}年度と違います"
+    return "見出し（令和N年度）が見つかりません"
+
+
+def main() -> None:
+    setup_console()
+    out_rows: list[list] = []
+    for src in SOURCES:
+        path = REF_DIR / src.file
+        if not path.exists():
+            if src.download_url is None:
+                print(f"  {src.file} がありません。ブラウザで取得して {REF_DIR} に置いてください（{src.url}）。この年度は飛ばします")
+                continue
+            download(src.download_url, path)
+        lines = pdf_lines(path)
+        bad = check_year(lines, src.year)
+        rows, problems = parse_lines(lines)
+        if bad:
+            problems.append(bad)
+        if problems:
+            detail = "\n  ".join(problems)
+            raise SystemExit(f"{src.file}：検算が合わないため、CSVを作りません:\n  {detail}")
+        print(f"  {src.file}：{src.year}年度 {len(rows)} 系統（検算OK）")
         for r in rows:
-            w.writerow(
+            out_rows.append(
                 [
                     f"{r['code']} {r['section']}",
                     "東京都交通局（都営バス）",
                     "route",
-                    FISCAL_YEAR,
+                    src.year,
                     r["riders"],
                     "",
                     r["fare_per_day_yen"],
                     "",
-                    SOURCE_NAME,
-                    PDF_URL,
+                    src.name,
+                    src.url,
                     date.today().isoformat(),
                 ]
             )
-    print(f"{OUT.relative_to(DATA_RAW.parent)}：{len(rows)} 系統（検算OK）")
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUT, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(COLUMNS)
+        w.writerows(out_rows)
+    print(f"{OUT.relative_to(DATA_RAW.parent)}：{len(out_rows)} 行")
 
 
 if __name__ == "__main__":

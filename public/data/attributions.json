@@ -98,14 +98,14 @@
     },
     {
       "id": "toei-balance",
-      "name": "東京都交通局 バス系統別収支状況（東京都オープンデータ「決算 参考」）",
+      "name": "東京都交通局 バス系統別収支状況（令和5年度は東京都オープンデータ「決算 参考」、令和6・7年度は交通局の決算公表ページ）",
       "provider": "東京都交通局",
       "url": "https://catalog.data.metro.tokyo.lg.jp/dataset/t000018d0000000011",
       "license": "CC BY 4.0（表示）",
       "licenseUrl": "https://creativecommons.org/licenses/by/4.0/deed.ja",
-      "dataVersion": "令和5年度",
+      "dataVersion": "令和5〜7年度",
       "modified": true,
-      "note": "参考実績（都営バスの系統別の乗車人員・乗車料収入）。PDFの表を読み取って使用（千円/日 → 円/日に換算）"
+      "note": "参考実績（都営バスの系統別の乗車人員・乗車料収入）。PDFの表を読み取って使用（千円/日 → 円/日に換算）。令和5年度は CC BY 4.0。TODO(根拠未確定)：令和6・7年度のPDFの正確なURLと利用条件（オープンデータの窓口にはまだない）を確認する"
     }
   ]
 }
