@@ -876,3 +876,29 @@ body {
   margin: 6px 0 0;
   padding-left: 1.2em;
 }
+
+/* 推計結果：ラジオ・チェックの横並び */
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+
+.radio-group-label {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.inline-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.inline-radio input {
+  width: auto;
+  margin: 0;
+}

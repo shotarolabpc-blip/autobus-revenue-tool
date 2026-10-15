@@ -78,6 +78,8 @@ export type YearDemand = {
   serviceFactor: number
   fareFactor: number
   rampUp: number
+  /** シナリオ係数（楽観・悲観シナリオの増減。1＝なし） */
+  scenarioFactor: number
   /** 施設・観光等の外部需要（1日あたり） */
   dailyFacility: Record<DayType, number>
   /** 1日あたり（補正後＋外部需要・頭打ち前） */
@@ -109,6 +111,8 @@ export type DemandInput = {
   captureRate: number
   serviceFactor: number
   fareFactor: number
+  /** シナリオ係数（楽観・悲観シナリオで、標準シナリオの需要を±%する。省略＝1。F-7-2） */
+  scenarioFactor?: number
   /** 運行開始からの年数（0始まり）→ 立ち上がり係数 */
   rampUp: (yearIndex: number) => number
   /** エリア全体の人口補正率（%／年。複利） */
@@ -188,7 +192,8 @@ export function computeDemand(input: DemandInput): YearDemand[] {
       })
     }
     const rampUp = input.rampUp(yearIndex)
-    const factor = input.serviceFactor * input.fareFactor * rampUp
+    const scenarioFactor = input.scenarioFactor ?? 1
+    const factor = input.serviceFactor * input.fareFactor * rampUp * scenarioFactor
     const days = input.days(fy)
     // 施設・観光等の外部需要（1日あたり。補正係数は掛けない。F-5-4）
     const dailyFacility: Record<DayType, number> = { weekday: 0, holiday: 0 }
@@ -229,6 +234,7 @@ export function computeDemand(input: DemandInput): YearDemand[] {
       serviceFactor: input.serviceFactor,
       fareFactor: input.fareFactor,
       rampUp,
+      scenarioFactor,
       dailyFacility,
       dailyDemand,
       dailyCapacity: input.dailyCapacity,

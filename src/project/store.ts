@@ -24,6 +24,8 @@ export type ProjectState = {
   addScenario: (name: string, defaults: ProjectDefaults) => void
   duplicateScenario: (id: string) => void
   renameScenario: (id: string, name: string) => void
+  /** 元のシナリオから、楽観（＋%）・悲観（−%）のシナリオを自動生成する（F-7-2） */
+  addDerivedScenarios: (baseId: string, percent: number) => void
   /** 最後の1つは削除できない */
   deleteScenario: (id: string) => void
 }
@@ -80,6 +82,29 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
       return { ...p, scenarios }
     })
     set({ activeScenarioId: copy.id })
+  },
+
+  addDerivedScenarios: (baseId, percent) => {
+    const base = get().project?.scenarios.find((s) => s.id === baseId)
+    if (!base || !(percent > 0)) return
+    const make = (kind: 'optimistic' | 'pessimistic'): Scenario => {
+      const sign = kind === 'optimistic' ? 1 : -1
+      return {
+        ...duplicateScenario(
+          base,
+          `${base.name}（${kind === 'optimistic' ? '楽観' : '悲観'} ${sign > 0 ? '+' : '−'}${percent}%）`,
+        ),
+        type: kind,
+        derivedFrom: { scenarioId: base.id, adjustPercent: sign * percent },
+      }
+    }
+    const added = [make('optimistic'), make('pessimistic')]
+    get().updateProject((p) => {
+      const i = p.scenarios.findIndex((s) => s.id === baseId)
+      const scenarios = [...p.scenarios]
+      scenarios.splice(i + 1, 0, ...added)
+      return { ...p, scenarios }
+    })
   },
 
   renameScenario: (id, name) => {

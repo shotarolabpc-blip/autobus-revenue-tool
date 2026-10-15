@@ -98,6 +98,7 @@ export function ScenarioList({ defaults }: { defaults: ProjectDefaults }) {
           ))}
         </tbody>
       </table>
+      <DerivedScenarioForm />
       <button
         type="button"
         className="btn"
@@ -105,6 +106,66 @@ export function ScenarioList({ defaults }: { defaults: ProjectDefaults }) {
       >
         ＋ 空のシナリオを追加
       </button>
+    </div>
+  )
+}
+
+/** 標準シナリオから楽観・悲観を自動生成する（F-7-2）。増減の%は根拠のある値がないため、ユーザーが決める */
+function DerivedScenarioForm() {
+  const scenarios = useProjectStore((s) => s.project?.scenarios ?? [])
+  const activeId = useProjectStore((s) => s.activeScenarioId)
+  const [pct, setPct] = useState('')
+  const [baseId, setBaseId] = useState<string | null>(null)
+  const bases = scenarios.filter((s) => !s.derivedFrom)
+  const selected =
+    baseId && bases.some((b) => b.id === baseId)
+      ? baseId
+      : (bases.find((b) => b.id === activeId) ?? bases[0])?.id
+  const value = Number(pct)
+  const ok = pct !== '' && Number.isFinite(value) && value > 0 && value < 100 && !!selected
+  return (
+    <div className="card">
+      <h4>楽観・悲観シナリオを自動で作る</h4>
+      <p className="hint">
+        元のシナリオの入力を引き継ぎ、延べ乗車人員（住民の需要）だけを＋％（楽観）・−％（悲観）にします。
+        元のシナリオを変えると、自動で反映されます。増減の％には公的な根拠値がないため、ご自身で決めて入力してください。
+      </p>
+      <div className="field-row">
+        <label className="field field-compact">
+          <span>元にするシナリオ</span>
+          <select value={selected ?? ''} onChange={(e) => setBaseId(e.target.value)}>
+            {bases.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field field-compact">
+          <span>増減（％）</span>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            step="any"
+            aria-label="増減（％）"
+            value={pct}
+            onChange={(e) => setPct(e.target.value)}
+            placeholder="例：20"
+          />
+        </label>
+        <button
+          type="button"
+          className="btn"
+          disabled={!ok}
+          onClick={() => {
+            if (selected) useProjectStore.getState().addDerivedScenarios(selected, value)
+            setPct('')
+          }}
+        >
+          楽観・悲観を作る
+        </button>
+      </div>
     </div>
   )
 }

@@ -229,3 +229,20 @@ export const coefficientsFileSchema = z.object({
   ),
 })
 export type CoefficientsFile = z.infer<typeof coefficientsFileSchema>
+
+/** 市区町村 → 都市類型（public/data/city_types.json）。一覧にない市区町村は自動判定しない */
+export const cityTypesFileSchema = z.object({
+  source: z.object({ title: z.string(), url: z.url(), note: z.string() }),
+  fallbackCode: z.number().int(),
+  fallbackName: z.string(),
+  rules: z.array(
+    z.object({
+      prefCode: z.string().regex(/^\d{2}$/),
+      cityCodeFrom: z.string().regex(/^\d{5}$/),
+      cityCodeTo: z.string().regex(/^\d{5}$/),
+      cityType: z.number().int(),
+      basis: z.string(),
+    }),
+  ),
+})
+export type CityTypesFile = z.infer<typeof cityTypesFileSchema>

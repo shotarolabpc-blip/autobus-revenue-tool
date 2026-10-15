@@ -148,7 +148,7 @@ def main() -> None:
                 age: {"from": m["from"], "provisional": bool(m.get("provisional", False))}
                 for age, m in rules["age_mapping"].items()
             },
-            "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。TODO(根拠未確定)：0〜4歳（provisional）はQ2未決定のため、暫定で5〜14歳の値を使う",
+            "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。TODO(根拠未確定)：0〜4歳はQ2未決定のため、暫定で5〜14歳の値を使う",
             "cityTypes": [{"code": c, "name": n} for c, n in sorted(names.items())],
             "values": values,
         },

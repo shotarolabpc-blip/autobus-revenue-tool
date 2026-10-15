@@ -74,6 +74,27 @@
       "dataVersion": "2026-10-08",
       "modified": true,
       "note": "道路網（経路計算用）。加工した道路網データは ODbL に従い、このサイトの public/data/roads/ で公開"
+    },
+    {
+      "id": "mlit-survey",
+      "name": "全国都市交通特性調査（令和3年）集計表",
+      "provider": "国土交通省",
+      "url": "https://www.mlit.go.jp/toshi/tosiko/toshi_tosiko_tk_000196.html",
+      "license": "国土交通省ホームページの利用規約（出典の明記）",
+      "licenseUrl": null,
+      "dataVersion": "令和3年",
+      "modified": true,
+      "note": "外出率・トリップ数・バス分担率を、年齢区分ごとに取り込んで使用。TODO(根拠未確定)：利用規約の正式名称を確認して差し替える"
+    },
+    {
+      "id": "vehicle-specs",
+      "name": "車両スペック（プリセット）",
+      "provider": "各メーカー・運行事業者の公表資料",
+      "url": "https://github.com/shotarolabpc-blip/autobus-revenue-tool",
+      "license": "公表資料の引用（出典は車両ごとに vehicle_presets.json に記載）",
+      "licenseUrl": null,
+      "dataVersion": null,
+      "note": "定員・速度・航続距離などは参考値。実際の値はメーカー・運行事業者に確認すること。出典URLは車両プリセットの各項目に記載"
     }
   ]
 }

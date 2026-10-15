@@ -1,6 +1,8 @@
 import type { z } from 'zod'
 import {
   attributionsFileSchema,
+  cityTypesFileSchema,
+  type CityTypesFile,
   coefficientsFileSchema,
   type CoefficientsFile,
   basemapsFileSchema,
@@ -69,3 +71,6 @@ export const loadFareReferences = (): Promise<FareReferencesFile> =>
 
 export const loadCoefficients = (): Promise<CoefficientsFile> =>
   cached('coefficients.json', coefficientsFileSchema)
+
+export const loadCityTypes = (): Promise<CityTypesFile> =>
+  cached('city_types.json', cityTypesFileSchema)

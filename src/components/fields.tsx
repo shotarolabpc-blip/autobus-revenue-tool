@@ -110,3 +110,38 @@ export function Stat({
     </div>
   )
 }
+
+/** 文字の入力欄 */
+export function TextField({
+  label,
+  value,
+  onChange,
+  required = false,
+  hint,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  required?: boolean
+  hint?: ReactNode
+  placeholder?: string
+}) {
+  const missing = required && value.trim() === ''
+  return (
+    <label className={`field field-compact${missing ? ' is-missing' : ''}`}>
+      <span>
+        {label}
+        {missing && <em className="required">要入力</em>}
+      </span>
+      <input
+        type="text"
+        aria-label={label}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {hint && <small className="hint">{hint}</small>}
+    </label>
+  )
+}

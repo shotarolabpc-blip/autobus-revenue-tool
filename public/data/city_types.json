@@ -1,0 +1,33 @@
+{
+  "_comment": "市区町村 → 全国都市交通特性調査の都市類型（public/data/coefficients.json の cityTypes のコード）。調査の対象都市の一覧に書かれている都市だけを入れる。一覧にない市区町村は自動判定せず、画面で選んでもらう。",
+  "source": {
+    "title": "全国都市交通特性調査（令和3年）の都市類型（調査の対象都市一覧）",
+    "url": "https://www.mlit.go.jp/toshi/tosiko/toshi_tosiko_tk_000196.html",
+    "note": "TODO(根拠未確定)：類型の定義の一次資料（調査の概要・対象都市一覧のPDF）のURLを確認して差し替える。東京都の周辺都市は、東京の中心から40km未満が類型b（コード2）、40km以上が類型c（コード3）と書かれているが、距離の基準点が不明なため、調査の対象都市に挙がっている稲城市・青梅市だけを入れた。"
+  },
+  "fallbackCode": 100,
+  "fallbackName": "全国計",
+  "rules": [
+    {
+      "prefCode": "13",
+      "cityCodeFrom": "13101",
+      "cityCodeTo": "13123",
+      "cityType": 1,
+      "basis": "東京区部は類型a（三大都市圏／中心都市）"
+    },
+    {
+      "prefCode": "13",
+      "cityCodeFrom": "13225",
+      "cityCodeTo": "13225",
+      "cityType": 2,
+      "basis": "稲城市は類型b（三大都市圏／周辺都市1）として調査の対象都市に挙がっている"
+    },
+    {
+      "prefCode": "13",
+      "cityCodeFrom": "13205",
+      "cityCodeTo": "13205",
+      "cityType": 3,
+      "basis": "青梅市は類型c（三大都市圏／周辺都市2）として調査の対象都市に挙がっている"
+    }
+  ]
+}
