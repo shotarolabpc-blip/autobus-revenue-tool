@@ -14,27 +14,69 @@ const v = (o: Partial<VehicleSpec>): VehicleSpec => ({
   seats: null,
   standingAllowed: null,
   operatorOnBoard: null,
+  operatorUsesPassengerSeat: null,
   operatorCount: null,
   rangeKm: null,
   chargeHours: null,
   ...o,
 })
 
-describe('実効定員', () => {
-  it('運用定員から乗車する保安要員を引く', () => {
-    expect(effectiveCapacity(v({ capacity: 11, operatorOnBoard: true, operatorCount: 1 }))).toBe(10)
+describe('実効定員（確認事項 Q6）', () => {
+  it('保安要員が客席を使う車両は、保安要員の人数を引く', () => {
+    expect(
+      effectiveCapacity(
+        v({
+          capacity: 11,
+          operatorOnBoard: true,
+          operatorUsesPassengerSeat: true,
+          operatorCount: 1,
+        }),
+      ),
+    ).toBe(10)
+  })
+  it('保安要員が専用席（運転席など）に座る車両は引かない', () => {
+    expect(
+      effectiveCapacity(
+        v({
+          capacity: 11,
+          operatorOnBoard: true,
+          operatorUsesPassengerSeat: false,
+          operatorCount: 1,
+        }),
+      ),
+    ).toBe(11)
+  })
+  it('保安要員が乗らない車両は引かない', () => {
     expect(effectiveCapacity(v({ capacity: 11, operatorOnBoard: false }))).toBe(11)
   })
-  it('立席を使わない場合は座席数をもとにする', () => {
+  it('立席を使わない場合は、乗客用の座席数をもとにする', () => {
     expect(
       effectiveCapacity(
         v({ capacity: 23, seats: 15, standingAllowed: false, operatorOnBoard: false }),
       ),
     ).toBe(15)
+    // 座席数は乗客用なので、専用席に座る保安要員は引かない（座席15＋運転席1 → 15）
+    expect(
+      effectiveCapacity(
+        v({
+          capacity: 16,
+          seats: 15,
+          standingAllowed: false,
+          operatorOnBoard: true,
+          operatorUsesPassengerSeat: false,
+          operatorCount: 1,
+        }),
+      ),
+    ).toBe(15)
   })
-  it('未入力があれば null（要入力）', () => {
+  it('未入力があれば null（要入力。推測で補わない）', () => {
     expect(effectiveCapacity(v({ capacity: 11 }))).toBeNull()
     expect(effectiveCapacity(v({ capacity: 11, operatorOnBoard: true }))).toBeNull()
+    expect(
+      effectiveCapacity(
+        v({ capacity: 11, operatorOnBoard: true, operatorUsesPassengerSeat: true }),
+      ),
+    ).toBeNull()
   })
 })
 

@@ -4,7 +4,7 @@ import { toHolidayData } from '../data/holidays'
 import { loadPopulationUnits } from '../data/population'
 import {
   loadAttributions,
-  loadBusRoutes,
+  loadBusStops,
   loadCityTypes,
   loadCoefficients,
   loadDefaults,
@@ -27,7 +27,7 @@ import {
   type ScenarioResult,
 } from '../calc/pipeline'
 import { catchmentBounds } from '../gis/catchment'
-import type { ExistingRoute } from '../gis/overlap'
+import type { ExistingStop } from '../gis/overlap'
 import type { ProjectFile } from './schema'
 
 /** 推計に使う、このサイト自身の静的データ（外部には送らない） */
@@ -74,7 +74,7 @@ export type ResultsState =
 export function useResults(project: ProjectFile | null): ResultsState {
   const stat = useAsync(loadStatic)
   const [pop, setPop] = useState<PopulationState | null>(null)
-  const [routes, setRoutes] = useState<{ pref: string; items: ExistingRoute[] | null } | null>(null)
+  const [routes, setRoutes] = useState<{ pref: string; items: ExistingStop[] | null } | null>(null)
 
   const prefCode = project?.project.municipality.prefCode ?? null
   const bounds = useMemo(() => {
@@ -127,12 +127,12 @@ export function useResults(project: ProjectFile | null): ResultsState {
   useEffect(() => {
     if (!prefCode) return
     let alive = true
-    loadBusRoutes(prefCode).then((items) => alive && setRoutes({ pref: prefCode, items }))
+    loadBusStops(prefCode).then((items) => alive && setRoutes({ pref: prefCode, items }))
     return () => {
       alive = false
     }
   }, [prefCode])
-  const existingRoutes = routes && routes.pref === prefCode ? routes.items : null
+  const existingStops = routes && routes.pref === prefCode ? routes.items : null
 
   const ready = stat.status === 'ready' ? stat.data : null
   const popReady = pop && pop.key === key ? pop : null
@@ -155,11 +155,11 @@ export function useResults(project: ProjectFile | null): ResultsState {
         population,
         holidayData: toHolidayData(ready.holidays),
         taxRate: ready.defaults.items.consumptionTaxRate.value,
-        existingRoutes,
+        existingStops,
       }
       return runScenario(project, eff, data)
     })
-  }, [project, ready, popReady, existingRoutes])
+  }, [project, ready, popReady, existingStops])
 
   if (stat.status === 'error') return { status: 'error', message: stat.error.message }
   if (!project) return { status: 'loading' }

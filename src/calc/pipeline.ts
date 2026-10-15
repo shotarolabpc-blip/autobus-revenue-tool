@@ -10,7 +10,7 @@
  * 根拠のない係数（立ち上がり・運賃弾力性・運行サービス補正）は、ユーザーが入力しない限り効かせない（5.1A）。
  */
 import { catchmentWeights, stopForPoint, type MeshUnit } from '../gis/catchment'
-import { overlappingOperators, type ExistingRoute } from '../gis/overlap'
+import { existingStopsInCatchments, operatorsOf, type ExistingStop } from '../gis/overlap'
 import { positionDistancesKm, routeKm, stopToStopKm } from '../gis/route'
 import type { CityTypeJudgement } from '../data/coefficients'
 import type { CoefficientsFile } from '../data/schemas'
@@ -46,11 +46,32 @@ export type PipelineData = {
   holidayData: HolidayData
   /** 消費税率（比率） */
   taxRate: number
-  /** 既存のバス路線（勢圏との重なりの警告に使う）。読み込めなかった場合は null */
-  existingRoutes?: ExistingRoute[] | null
+  /** 既存のバス停（勢圏との重なりの判定に使う）。読み込めなかった場合は null */
+  existingStops?: ExistingStop[] | null
 }
 
-export type FareMethod = 'flat' | 'avgRideKm' | 'uniformAlighting'
+/**
+ * 路線捕捉率の状態。unset＝勢圏が既存バス停と重なるのに、便数も捕捉率も入力されていない（計算は1.0。「未設定」と表示する）
+ */
+export type CaptureStatus = {
+  stopId: string
+  name: string
+  status: 'none' | 'unset' | 'trips' | 'direct' | 'global'
+  /** 勢圏の中にある既存バス停 */
+  existing: ExistingStop[]
+  weekday: number
+  holiday: number
+}
+
+export const CAPTURE_LABELS: Record<CaptureStatus['status'], string> = {
+  none: '既存バス停と重ならない（100%）',
+  unset: '既存バス停と重なる。便数も捕捉率も未入力',
+  trips: '既存路線の便数を入力して按分',
+  direct: '捕捉率を直接入力',
+  global: '全体の手入力（一律）',
+}
+
+export type FareMethod = 'flat' | 'avgRideKm' | 'destinationWeighted'
 
 export type ScenarioResult = {
   scenarioId: string
@@ -64,7 +85,8 @@ export type ScenarioResult = {
   averageFare: number
   fareMethod: FareMethod
   fareFactor: number
-  captureRate: number
+  /** バス停ごとの路線捕捉率と、その決め方（確認事項 Q5） */
+  captures: CaptureStatus[]
   /** 使った係数（上書き反映後。出力物の前提条件に載せる） */
   coefficients: Coefficients
   /** ユーザーが上書きした係数のキー */
@@ -131,7 +153,7 @@ function blockedResult(
     averageFare: 0,
     fareMethod: 'flat',
     fareFactor: 1,
-    captureRate: 1,
+    captures: [],
     coefficients: data.coefficients.values[String(data.cityType.code)],
     overriddenKeys: [],
     cityType: data.cityType,
@@ -180,15 +202,6 @@ export function runScenario(
   if (!data.cityType.auto && scenario.coefficients.cityTypeOverride === null) {
     warnings.push(`都市類型：${data.cityType.name}（${data.cityType.basis}）`)
   }
-  const prov = Object.entries(data.coefficients.ageMapping)
-    .filter(([, m]) => m.provisional)
-    .map(([k]) => k)
-  if (prov.length > 0) {
-    warnings.push(
-      `${prov.join('・')}歳の係数は、調査の対象外（5歳未満）のため暫定で5〜14歳の値を使っています（確認事項 Q2 が未決定）。`,
-    )
-  }
-
   // 2. 勢圏人口の面積按分
   const catchStops = scenario.stops.map((s) => ({
     id: s.id,
@@ -208,29 +221,6 @@ export function runScenario(
     const last = data.population.years[data.population.years.length - 1]
     if (years[0] < first || years[years.length - 1] > last) {
       warnings.push(`人口データは ${first}〜${last} 年です。範囲外の年度は端の年の値を使います。`)
-    }
-  }
-
-  // Q5：勢圏が既存のバス路線と重なるときは警告し、路線捕捉率の入力を促す（運行本数のデータがなく自動按分できないため）
-  if (scenario.coefficients.routeCaptureOverride === null && data.existingRoutes) {
-    const overlaps = overlappingOperators(
-      scenario.stops.map((s) => ({
-        id: s.id,
-        name: s.name,
-        lng: s.lng,
-        lat: s.lat,
-        radiusM: s.catchmentM,
-      })),
-      data.existingRoutes,
-    )
-    if (overlaps.size > 0) {
-      const names = scenario.stops.filter((s) => overlaps.has(s.id)).map((s) => s.name)
-      const ops = [...new Set([...overlaps.values()].flat())]
-      warnings.push(
-        `バス停${names.map((n) => `「${n}」`).join('')}の勢圏は、既存のバス路線（${ops.join('、')}）と重なっています。` +
-          '既存路線にも乗れる人がいるため、このままだと需要を多く見積もっている可能性があります。' +
-          '運行本数のデータがなく自動では按分できないため、「前提条件」画面の「路線捕捉率」に、本路線を使う割合を入力してください（空欄は100%の計算です）。',
-      )
     }
   }
 
@@ -297,7 +287,84 @@ export function runScenario(
   }
 
   const c = scenario.coefficients
-  const captureRate = c.routeCaptureOverride ?? 1
+  // 路線捕捉率（確認事項 Q5）：バス停ごと・日種別ごと。
+  //   設定あり：便数を入力 → 本路線の便数 ÷（本路線の便数 ＋ 重なる既存路線の便数の合計）（平日と土休日で別々）／ 直接入力
+  //   設定なし：勢圏の中に既存バス停があれば「未設定」（計算は1.0）。なければ、全体の手入力があればそれ、なければ1.0
+  const overlaps = data.existingStops
+    ? existingStopsInCatchments(
+        scenario.stops.map((st) => ({
+          id: st.id,
+          name: st.name,
+          lng: st.lng,
+          lat: st.lat,
+          radiusM: st.catchmentM,
+          existingStopId: st.existingStopId,
+        })),
+        data.existingStops,
+      )
+    : new Map<string, ExistingStop[]>()
+  const ownTrips = { weekday: sv.weekdayTrips, holiday: sv.holidayTrips }
+  const share = (own: number, other: number) => (own + other > 0 ? own / (own + other) : 1)
+  const captures: CaptureStatus[] = scenario.stops.map((st) => {
+    const existing = overlaps.get(st.id) ?? []
+    const set = scenario.stopCapture.find((x) => x.stopId === st.id)
+    const global = c.routeCaptureOverride
+    if (set?.mode === 'trips') {
+      return {
+        stopId: st.id,
+        name: st.name,
+        status: 'trips',
+        existing,
+        weekday: share(ownTrips.weekday, set.existingWeekdayTrips),
+        holiday: share(ownTrips.holiday, set.existingHolidayTrips),
+      }
+    }
+    if (set?.mode === 'direct') {
+      return {
+        stopId: st.id,
+        name: st.name,
+        status: 'direct',
+        existing,
+        weekday: set.rate,
+        holiday: set.rate,
+      }
+    }
+    if (existing.length > 0 && global === null) {
+      return { stopId: st.id, name: st.name, status: 'unset', existing, weekday: 1, holiday: 1 }
+    }
+    if (global !== null) {
+      return {
+        stopId: st.id,
+        name: st.name,
+        status: 'global',
+        existing,
+        weekday: global,
+        holiday: global,
+      }
+    }
+    return { stopId: st.id, name: st.name, status: 'none', existing, weekday: 1, holiday: 1 }
+  })
+  const unset = captures.filter((x) => x.status === 'unset')
+  if (unset.length > 0) {
+    const ops = operatorsOf(unset.flatMap((x) => x.existing))
+    warnings.push(
+      `路線捕捉率 未設定：バス停${unset.map((x) => `「${x.name}」`).join('')}の勢圏の中に、既存のバス停があります（${ops.join('、')}）。` +
+        '既存路線にも乗れる人がいるため、このままだと延べ乗車人員を多く見積もっている可能性があります（未設定のあいだは捕捉率1.0で計算しています）。' +
+        '「前提条件」画面で、重なる既存路線の便数を入力して按分するか、捕捉率を直接入力してください。',
+    )
+  }
+  for (const x of captures) {
+    const set = scenario.stopCapture.find((y) => y.stopId === x.stopId)
+    if (set?.mode === 'trips' && (ownTrips.weekday <= 0 || ownTrips.holiday <= 0)) {
+      warnings.push(
+        `バス停「${x.name}」の捕捉率は、本路線の便数（平日${ownTrips.weekday}・土休日${ownTrips.holiday}）で按分しています。便数が0の日は捕捉率が0になります。`,
+      )
+      break
+    }
+  }
+  const captureOf = new Map(captures.map((x) => [x.stopId, x]))
+  const captureRate = (stopId: string, dt: 'weekday' | 'holiday') =>
+    captureOf.get(stopId)?.[dt] ?? 1
   const scenarioFactor = scenario.derivedFrom ? 1 + scenario.derivedFrom.adjustPercent / 100 : 1
   const base: DemandInput = {
     fiscalYears: years,
@@ -314,7 +381,8 @@ export function runScenario(
     areaAdjustPctPerYear: scenario.areaPopulationAdjustPctPerYear,
     developments,
     facilities: scenario.facilityDemand.map((f) => ({
-      dailyRiders: f.visitorsPerDay * f.busShare,
+      // 来訪1人＝往復2乗車（行きと帰りのバス。確認事項 Q11）
+      dailyRiders: f.visitorsPerDay * f.busShare * 2,
       startFiscalYear: f.startFiscalYear,
       days: f.days,
     })),
@@ -353,9 +421,9 @@ export function runScenario(
     )
     averageFare = r.fare
     fareMethod = r.method
-    if (r.method === 'uniformAlighting') {
+    if (r.method === 'destinationWeighted') {
       warnings.push(
-        '対キロ区間制の平均運賃は、各バス停から先のバス停へ均等に降車すると仮定して求めています（平均乗車距離を入力すると、その距離の運賃になります）。',
+        '対キロ区間制の平均運賃は、乗るバス停・降りるバス停の推計乗車数で重み付けした運賃表の平均です（往復なので乗車と降車はほぼ同数とみなしています）。平均乗車距離を入力すると、その距離の運賃になります。',
       )
     }
   }
@@ -381,7 +449,11 @@ export function runScenario(
       cappedHoliday.length > 0 ? `土休日（${rangeText(cappedHoliday)}）` : '',
     ].filter(Boolean)
     warnings.push(
-      `需要が輸送力を超えたため、輸送力で頭打ちにしています：${parts.join('、')}。便数・車両を見直してください。`,
+      `需要が輸送力を超えたため、輸送力で頭打ちにしています：${parts.join('、')}。便数・車両を見直してください。` +
+        '輸送力は「車両に同時に乗れる人数×便数」で、途中で乗り降りが入れ替わる分は見込んでいないため、頭打ちはやや厳しめ（少なめ）に出ます。' +
+        (sv.vehicle.unverified.includes('capacity')
+          ? 'また、定員が「要確認」（出典が未確認）の値に基づいています。'
+          : ''),
     )
   }
   const usesEstimated = years.some(
@@ -410,7 +482,7 @@ export function runScenario(
     averageFare,
     fareMethod,
     fareFactor: ff,
-    captureRate,
+    captures,
     coefficients,
     overriddenKeys: applied,
     cityType: data.cityType,

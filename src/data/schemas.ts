@@ -148,6 +148,8 @@ export const vehiclePresetsFileSchema = z.object({
       seats: z.number().nullable(),
       standingAllowed: z.boolean().nullable(),
       operatorOnBoard: z.boolean().nullable(),
+      operatorUsesPassengerSeat: z.boolean().nullable(),
+      unverified: z.array(z.string()),
       operatorCount: z.number().nullable(),
       maxSpeedKmh: z.number().nullable(),
       avgSpeedKmh: z.number().nullable(),
@@ -216,10 +218,7 @@ export const coefficientsFileSchema = z.object({
   }),
   tables: z.record(z.string(), z.string()),
   tableFiles: z.array(z.object({ title: z.string(), url: z.url() })),
-  ageMapping: z.record(
-    z.string(),
-    z.object({ from: z.array(z.string()), provisional: z.boolean() }),
-  ),
+  ageMapping: z.record(z.string(), z.object({ from: z.array(z.string()), note: z.string() })),
   ageMappingStatus: z.string(),
   cityTypes: z.array(z.object({ code: z.number().int(), name: z.string() })),
   /** 都市類型コード → 平日／休日 → 年齢区分 → 係数 */

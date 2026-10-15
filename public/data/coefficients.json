@@ -23,49 +23,47 @@
   ],
   "ageMapping": {
     "0-4": {
-      "from": [
-        "5～14歳"
-      ],
-      "provisional": true
+      "from": [],
+      "note": "0〜4歳は需要に数えていません（調査の対象外。未就学児は同伴で無料が一般的で、移動は保護者の移動に含まれるため）"
     },
     "5-14": {
       "from": [
         "5～14歳"
       ],
-      "provisional": false
+      "note": ""
     },
     "15-29": {
       "from": [
         "15～29歳"
       ],
-      "provisional": false
+      "note": ""
     },
     "30-49": {
       "from": [
         "30～49歳"
       ],
-      "provisional": false
+      "note": ""
     },
     "50-64": {
       "from": [
         "50～64歳"
       ],
-      "provisional": false
+      "note": ""
     },
     "65-74": {
       "from": [
         "65～74歳"
       ],
-      "provisional": false
+      "note": ""
     },
     "75+": {
       "from": [
         "75歳～"
       ],
-      "provisional": false
+      "note": ""
     }
   },
-  "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。TODO(根拠未確定)：0〜4歳はQ2未決定のため、暫定で5〜14歳の値を使う",
+  "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。0〜4歳は需要に数えない（Q2：B、2026-10-15 決定。調査の対象外で、未就学児は同伴で無料が一般的なため）",
   "cityTypes": [
     {
       "code": 1,
@@ -116,9 +114,9 @@
     "1": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.933724,
-          "tripRate": 2.519626,
-          "busShare": 0.007528
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.933724,
@@ -153,9 +151,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.474743,
-          "tripRate": 2.575514,
-          "busShare": 0.019065
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.474743,
@@ -192,9 +190,9 @@
     "2": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.884867,
-          "tripRate": 2.409472,
-          "busShare": 0.004789
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.884867,
@@ -229,9 +227,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.497188,
-          "tripRate": 2.468434,
-          "busShare": 0.006007
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.497188,
@@ -268,9 +266,9 @@
     "3": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.9157,
-          "tripRate": 2.368969,
-          "busShare": 0.004203
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.9157,
@@ -305,9 +303,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.453041,
-          "tripRate": 2.794615,
-          "busShare": 0.001283
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.453041,
@@ -344,9 +342,9 @@
     "4": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.893138,
-          "tripRate": 2.298562,
-          "busShare": 0.005554
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.893138,
@@ -381,9 +379,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.465577,
-          "tripRate": 2.867521,
-          "busShare": 0.006099
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.465577,
@@ -420,9 +418,9 @@
     "5": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.850862,
-          "tripRate": 2.354576,
-          "busShare": 0.014461
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.850862,
@@ -457,9 +455,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.38517,
-          "tripRate": 2.738202,
-          "busShare": 0.001519
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.38517,
@@ -496,9 +494,9 @@
     "6": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.920496,
-          "tripRate": 2.458957,
-          "busShare": 0.012356
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.920496,
@@ -533,9 +531,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.506817,
-          "tripRate": 2.807869,
-          "busShare": 0.023968
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.506817,
@@ -572,9 +570,9 @@
     "7": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.937132,
-          "tripRate": 2.447537,
-          "busShare": 0.008634
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.937132,
@@ -609,9 +607,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.506457,
-          "tripRate": 2.757988,
-          "busShare": 0.0
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.506457,
@@ -648,9 +646,9 @@
     "8": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.934917,
-          "tripRate": 2.4347,
-          "busShare": 0.006906
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.934917,
@@ -685,9 +683,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.477394,
-          "tripRate": 2.842224,
-          "busShare": 0.0
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.477394,
@@ -724,9 +722,9 @@
     "9": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.893284,
-          "tripRate": 2.402101,
-          "busShare": 0.035577
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.893284,
@@ -761,9 +759,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.509736,
-          "tripRate": 2.909642,
-          "busShare": 0.0
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.509736,
@@ -800,9 +798,9 @@
     "10": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.938036,
-          "tripRate": 2.281813,
-          "busShare": 0.01963
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.938036,
@@ -837,9 +835,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.470361,
-          "tripRate": 2.608858,
-          "busShare": 0.0
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.470361,
@@ -876,9 +874,9 @@
     "100": {
       "weekday": {
         "0-4": {
-          "outingRate": 0.914829,
-          "tripRate": 2.411607,
-          "busShare": 0.010277
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.914829,
@@ -913,9 +911,9 @@
       },
       "holiday": {
         "0-4": {
-          "outingRate": 0.478497,
-          "tripRate": 2.681339,
-          "busShare": 0.007435
+          "outingRate": 0,
+          "tripRate": 0,
+          "busShare": 0
         },
         "5-14": {
           "outingRate": 0.478497,

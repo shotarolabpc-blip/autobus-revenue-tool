@@ -206,7 +206,7 @@ export function DemandInputsSection({ scenario, startFiscalYear, disabled }: Pro
         <h3>施設需要（病院・商業施設・観光地など）</h3>
         <fieldset disabled={disabled} style={{ border: 0, padding: 0, margin: 0 }}>
           <p className="hint">
-            来訪者数×バス利用率を、住民の需要とは別に加えます（補正係数は掛けません）。勢圏の中に住んでいる来訪者は、住民の需要と二重に数えるおそれがあるため、
+            来訪者数×バス利用率×2（往復）を、住民の需要とは別に加えます（補正係数は掛けません）。勢圏の中に住んでいる来訪者は、住民の需要と二重に数えるおそれがあるため、
             勢圏の外から来る人だけを入力してください。
           </p>
           {scenario.facilityDemand.map((f) => (
@@ -220,6 +220,7 @@ export function DemandInputsSection({ scenario, startFiscalYear, disabled }: Pro
                 <NumField
                   label="来訪者数（1日あたり）"
                   unit="人/日"
+                  hint="来訪1人＝往復2乗車（行きと帰りのバス）として数えます"
                   value={f.visitorsPerDay}
                   onChange={(v) => setFac(f.id, { visitorsPerDay: v ?? 0 })}
                 />

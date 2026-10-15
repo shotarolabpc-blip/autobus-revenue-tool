@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { CaptureSection } from '../components/assumptions/CaptureSection'
 import { AdjustSection } from '../components/assumptions/AdjustSection'
 import { BaselineTable } from '../components/assumptions/BaselineTable'
 import { CoefficientSection } from '../components/assumptions/CoefficientSection'
@@ -13,6 +14,7 @@ import {
 } from '../data/staticData'
 import { useAsync } from '../data/useAsync'
 import { useActiveScenario, useProjectStore } from '../project/store'
+import { useResults } from '../project/useResults'
 
 const loadAll = () =>
   Promise.all([
@@ -28,6 +30,7 @@ export function AssumptionsPage() {
   const state = useAsync(loadAll)
   const project = useProjectStore((s) => s.project)
   const scenario = useActiveScenario()
+  const results = useResults(project)
 
   if (!project || !scenario) {
     return (
@@ -74,6 +77,15 @@ export function AssumptionsPage() {
         scenario={scenario}
         coefficients={coefficients}
         cityTypes={cityTypes}
+        disabled={disabled}
+      />
+      <CaptureSection
+        scenario={scenario}
+        result={
+          results.status === 'ready'
+            ? (results.results.find((r) => r.scenarioId === scenario.id) ?? null)
+            : null
+        }
         disabled={disabled}
       />
       <AdjustSection scenario={scenario} defaults={defaults} disabled={disabled} />

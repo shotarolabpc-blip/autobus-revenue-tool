@@ -27,11 +27,16 @@ describe('coefficients.json（7区分）', () => {
     ).toBe(3)
   })
 
-  it('0〜4歳は暫定で5〜14歳と同じ値（Q2未決定）で、暫定の印がついている', () => {
-    const v = toDemandCoefficients(file, 100)
-    expect(v.weekday['0-4']).toEqual(v.weekday['5-14'])
-    expect(file.ageMapping['0-4'].provisional).toBe(true)
-    expect(file.ageMapping['5-14'].provisional).toBe(false)
+  it('0〜4歳は需要に数えない（確認事項 Q2：外出率・トリップ数・バス分担率がすべて0）', () => {
+    for (const c of file.cityTypes) {
+      const v = toDemandCoefficients(file, c.code)
+      for (const day of ['weekday', 'holiday'] as const) {
+        expect(v[day]['0-4']).toEqual({ outingRate: 0, tripRate: 0, busShare: 0 })
+        // 5〜14歳は調査の値のまま
+        expect(v[day]['5-14'].outingRate).toBeGreaterThan(0)
+      }
+    }
+    expect(file.ageMapping['0-4'].note).toContain('数えていません')
   })
 })
 

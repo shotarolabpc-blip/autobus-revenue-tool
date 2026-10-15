@@ -225,7 +225,8 @@ describe('runScenario（手計算との照合）', () => {
       ]
     })
     const r = runScenario(project, sc, data)
-    const expected = (daily('weekday') + 10) * 245 + daily('holiday') * 120
+    // 来訪1人＝往復2乗車（確認事項 Q11）：100人×10%×2＝20乗車/日
+    const expected = (daily('weekday') + 20) * 245 + daily('holiday') * 120
     expect(r.demand[0].totalAnnual).toBeCloseTo(expected, 6)
   })
 
@@ -239,9 +240,12 @@ describe('runScenario（手計算との照合）', () => {
     expect(r.revenue).toEqual([])
   })
 
-  it('0〜4歳の暫定扱い（Q2）と、都市類型を自動判定できない場合を、警告に出す', () => {
+  it('0〜4歳は需要に数えない（確認事項 Q2）。都市類型を自動判定できない場合は警告に出す', () => {
     const { project, sc, data } = setup()
-    expect(runScenario(project, sc, data).warnings.some((x) => x.includes('Q2'))).toBe(true)
+    const r0 = runScenario(project, sc, data)
+    const t = r0.demand[0].terms.filter((x) => x.age === '0-4')
+    expect(t.length).toBe(2)
+    expect(t.every((x) => x.dailyBase === 0)).toBe(true)
     const d2 = { ...data, cityType: judgeCityType(coefFile, cityTypes, '13', '13204', null) }
     const r = runScenario(project, sc, d2)
     expect(r.warnings.some((x) => x.includes('都市類型'))).toBe(true)
@@ -322,32 +326,112 @@ describe('バス停別の年間延べ乗車人員', () => {
   })
 })
 
-describe('既存路線との重なり（Q5）', () => {
-  const routes = [
-    {
-      coordinates: [
-        [center.lng - 0.002, center.lat],
-        [center.lng + 0.002, center.lat],
-      ] as [number, number][],
-      operator: '既存バス',
-    },
+describe('路線捕捉率（確認事項 Q5）', () => {
+  // バス停の約90m先に既存バス停がある
+  const existing = [
+    { id: 'e1', name: '既存A', operator: '既存バス', lng: center.lng + 0.001, lat: center.lat },
   ]
-  it('重なるときは警告して捕捉率の入力を促す。計算は変えない', () => {
+  const cap = (r: ReturnType<typeof runScenario>) => r.captures[0]
+
+  it('勢圏に既存バス停があり、設定がないあいだは「未設定」と警告し、計算は1.0', () => {
     const { project, sc, data } = setup((s) => (s.stops[0].catchmentM = 300))
-    const withRoutes = runScenario(project, sc, { ...data, existingRoutes: routes })
+    const withStops = runScenario(project, sc, { ...data, existingStops: existing })
     const without = runScenario(project, sc, data)
-    expect(
-      withRoutes.warnings.some((x) => x.includes('既存のバス路線') && x.includes('路線捕捉率')),
-    ).toBe(true)
-    expect(withRoutes.demand[0].totalAnnual).toBe(without.demand[0].totalAnnual)
+    expect(cap(withStops)).toMatchObject({ status: 'unset', weekday: 1, holiday: 1 })
+    expect(withStops.warnings.some((x) => x.includes('路線捕捉率 未設定'))).toBe(true)
+    expect(withStops.demand[0].totalAnnual).toBe(without.demand[0].totalAnnual)
   })
-  it('捕捉率を手入力したら警告しない', () => {
+
+  it('重ならないバス停は1.0で、警告しない', () => {
+    const { project, sc, data } = setup((s) => (s.stops[0].catchmentM = 50))
+    const r = runScenario(project, sc, { ...data, existingStops: existing })
+    expect(cap(r).status).toBe('none')
+    expect(r.warnings.some((x) => x.includes('路線捕捉率 未設定'))).toBe(false)
+  })
+
+  it('便数を入力して按分：本路線÷（本路線＋既存路線）を、平日と土休日で別々に', () => {
     const { project, sc, data } = setup((s) => {
-      s.stops[0].catchmentM = 300
+      s.service.weekdayTrips = 20
+      s.service.holidayTrips = 10
+      s.stopCapture = [
+        {
+          stopId: 's1',
+          mode: 'trips',
+          existingWeekdayTrips: 60,
+          existingHolidayTrips: 10,
+          rate: 0,
+        },
+      ]
+    })
+    const r = runScenario(project, sc, { ...data, existingStops: existing })
+    expect(cap(r).weekday).toBeCloseTo(20 / 80, 12) // 0.25
+    expect(cap(r).holiday).toBeCloseTo(10 / 20, 12) // 0.5
+    // 平日は25%、土休日は50%で計算される
+    const expected = daily('weekday') * 0.25 * 245 + daily('holiday') * 0.5 * 120
+    expect(r.demand[0].totalAnnual).toBeCloseTo(expected, 6)
+    expect(r.warnings.some((x) => x.includes('路線捕捉率 未設定'))).toBe(false)
+  })
+
+  it('捕捉率を直接入力：平日も土休日も同じ値で計算する', () => {
+    const { project, sc, data } = setup((s) => {
+      s.stopCapture = [
+        {
+          stopId: 's1',
+          mode: 'direct',
+          existingWeekdayTrips: 0,
+          existingHolidayTrips: 0,
+          rate: 0.4,
+        },
+      ]
+    })
+    const r = runScenario(project, sc, { ...data, existingStops: existing })
+    expect(cap(r)).toMatchObject({ status: 'direct', weekday: 0.4, holiday: 0.4 })
+    expect(r.demand[0].totalAnnual).toBeCloseTo(
+      0.4 * (daily('weekday') * 245 + daily('holiday') * 120),
+      6,
+    )
+  })
+
+  it('全体の手入力（一律の捕捉率）があれば、未設定にならない。バス停ごとの設定が優先', () => {
+    const { project, sc, data } = setup((s) => {
       s.coefficients.routeCaptureOverride = 0.5
     })
-    const r = runScenario(project, sc, { ...data, existingRoutes: routes })
-    expect(r.warnings.some((x) => x.includes('既存のバス路線'))).toBe(false)
-    expect(r.captureRate).toBe(0.5)
+    const r = runScenario(project, sc, { ...data, existingStops: existing })
+    expect(cap(r)).toMatchObject({ status: 'global', weekday: 0.5 })
+    sc.stopCapture = [
+      { stopId: 's1', mode: 'direct', existingWeekdayTrips: 0, existingHolidayTrips: 0, rate: 0.2 },
+    ]
+    expect(cap(runScenario(project, sc, { ...data, existingStops: existing }))).toMatchObject({
+      status: 'direct',
+      weekday: 0.2,
+    })
+  })
+
+  it('既存バス停から採用したバス停は、その既存バス停自身では「重なり」にならない', () => {
+    const { project, sc, data } = setup((s) => (s.stops[0].existingStopId = 'e1'))
+    const r = runScenario(project, sc, {
+      ...data,
+      existingStops: [{ id: 'e1', name: '自分', operator: 'X', lng: center.lng, lat: center.lat }],
+    })
+    expect(cap(r).status).toBe('none')
+  })
+})
+
+describe('車両の定員（確認事項 Q7）', () => {
+  it('定員が「要確認」の値のとき、頭打ちの警告に併記する。輸送力は途中の入れ替わりを見込まない旨も', () => {
+    const { project, sc, data } = setup((s) => {
+      s.service.vehicle = {
+        ...s.service.vehicle,
+        capacity: 11,
+        operatorOnBoard: false,
+        standingAllowed: true,
+        unverified: ['capacity'],
+      }
+      s.service.weekdayTrips = 1
+      s.service.holidayTrips = 1
+    })
+    const w = runScenario(project, sc, data).warnings.find((x) => x.includes('頭打ち'))
+    expect(w).toContain('要確認')
+    expect(w).toContain('入れ替わる')
   })
 })

@@ -111,10 +111,13 @@ export function excludeTax(yenIncludingTax: number, taxRate: number): number {
 }
 
 /**
- * 対キロ区間制の平均運賃（割引前）。
+ * 対キロ区間制の平均運賃（割引前）。確認事項 Q10。
  * - 平均乗車距離（avgRideKm）が入力されていれば、その距離の運賃。
- * - なければ、バス停別の乗車数（boardings）で重みを付け、各バス停から先のバス停へ均等に降車すると仮定して、運賃表を平均する。
- *   TODO(根拠未確定)：「均等に降車」は仮定。平均乗車距離の既定の決め方はユーザー確認待ち。
+ * - なければ、運賃表の平均を、乗るバス停・降りるバス停の推計乗車数で重み付けして求める。
+ *   乗車 i → 降車 j の重み ＝ 乗車数(i) × 乗車数(j)。往復なので、降車数は乗車数とほぼ同じとみなす
+ *   （行き先を均等とみなすより、バス停の人口の違いを反映でき、説明しやすい）。
+ *   距離は運賃表と同じ：循環は進行方向にたどった距離、往復は上りと下りで同じ距離、同じバス停を何度も通るルートは最も短い乗車距離。
+ *   乗車数がすべて0のときは、行き先を均等とみなす。
  */
 export function averageDistanceFare(
   table: (number | null)[][],
@@ -122,7 +125,7 @@ export function averageDistanceFare(
   loop: boolean,
   s: FareSettings,
   avgRideKm: number | null,
-): { fare: number; method: 'avgRideKm' | 'uniformAlighting' } {
+): { fare: number; method: 'avgRideKm' | 'destinationWeighted' } {
   if (avgRideKm !== null) {
     return {
       fare: distanceFare(avgRideKm, s.baseFare, s.ratePerKm, s.rounding),
@@ -130,22 +133,20 @@ export function averageDistanceFare(
     }
   }
   const n = table.length
+  const total = boardings.reduce((a, b) => a + (b > 0 ? b : 0), 0)
+  // 乗車数がすべて0なら、全バス停を同じ重みにする
+  const w = (i: number) => (total > 0 ? Math.max(0, boardings[i] ?? 0) : 1)
   let sum = 0
   let weight = 0
   for (let i = 0; i < n; i++) {
-    const dests: number[] = []
     for (let j = 0; j < n; j++) {
       if (j === i) continue
-      // 往復ルートは両方向に乗る。循環ルートは一方向に回る（全バス停が行き先）
       const f = table[i][j]
-      if (f !== null) dests.push(f)
+      if (f === null) continue
+      sum += f * w(i) * w(j)
+      weight += w(i) * w(j)
     }
-    if (dests.length === 0) continue
-    const avg = dests.reduce((a, b) => a + b, 0) / dests.length
-    const w = boardings[i] ?? 0
-    sum += avg * w
-    weight += w
   }
   void loop
-  return { fare: weight > 0 ? sum / weight : 0, method: 'uniformAlighting' }
+  return { fare: weight > 0 ? sum / weight : 0, method: 'destinationWeighted' }
 }

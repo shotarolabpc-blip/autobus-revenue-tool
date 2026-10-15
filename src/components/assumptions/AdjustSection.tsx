@@ -71,7 +71,7 @@ export function AdjustSection({ scenario, defaults, disabled }: Props) {
             onChange={(v) => setCoef({ fareElasticitySource: v || null })}
           />
           <NumField
-            label="路線捕捉率（手入力）"
+            label="路線捕捉率（全バス停に一律・任意）"
             unit="%"
             min={0}
             max={100}
@@ -82,7 +82,7 @@ export function AdjustSection({ scenario, defaults, disabled }: Props) {
             }
             onChange={(v) => setCoef({ routeCaptureOverride: v === null ? null : v / 100 })}
             placeholder="空欄＝100%"
-            hint="勢圏が既存のバス路線と重なるときは、本路線を使う割合を入れてください。空欄は、重なりを考慮しない（100%）計算です。"
+            hint="バス停ごとの設定は上の「路線捕捉率」で行います。ここに入れると、重なりの有無にかかわらず全バス停に同じ割合を使います（バス停ごとの設定が優先）。空欄は100%です"
           />
           <NumField
             label="エリア全体の人口補正率"

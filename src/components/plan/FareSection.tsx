@@ -149,7 +149,7 @@ export function FareSection({
               value={f.avgRideKmOverride}
               placeholder="自動"
               onChange={(x) => setFare({ avgRideKmOverride: x })}
-              hint="空欄なら、バス停別の推計乗車数で重み付けし、行き先は均等とみなして平均（暫定）"
+              hint="空欄なら、乗るバス停・降りるバス停の推計乗車数で重み付けして、運賃表を平均します"
             />
           </div>
         )}

@@ -124,6 +124,10 @@ def main() -> None:
             values[str(code)][day] = {}
             for age, m in rules["age_mapping"].items():
                 entry = {}
+                if m.get("zero"):
+                    # 需要に数えない区分（Q2：0〜4歳）。値はすべて0
+                    values[str(code)][day][age] = {"outingRate": 0, "tripRate": 0, "busShare": 0}
+                    continue
                 for k in ("outingRate", "tripRate", "busShare"):
                     src = [raw.get((code, day, a), {}).get(k) for a in m["from"]]
                     if any(v is None for v in src):
@@ -145,10 +149,10 @@ def main() -> None:
                 {"title": MODE["title"], "url": MODE["url"]},
             ],
             "ageMapping": {
-                age: {"from": m["from"], "provisional": bool(m.get("provisional", False))}
+                age: {"from": m.get("from", []), "note": m.get("note", "")}
                 for age, m in rules["age_mapping"].items()
             },
-            "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。TODO(根拠未確定)：0〜4歳はQ2未決定のため、暫定で5〜14歳の値を使う",
+            "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。0〜4歳は需要に数えない（Q2：B、2026-10-15 決定。調査の対象外で、未就学児は同伴で無料が一般的なため）",
             "cityTypes": [{"code": c, "name": n} for c, n in sorted(names.items())],
             "values": values,
         },

@@ -18,7 +18,9 @@
       "autonomyLevel": null,
       "sources": {
         "capacity": "要件定義書 v0.5 F-3A「私道15人／公道11人」（出典：ソフトバンク（BOLDLY）車両ページ）。TODO(根拠未確定)：同ページは現在閲覧できず、2017年のソフトバンクの発表では「乗車定員15名（座席数11）」と記載。公道の運用定員を確認すること"
-      }
+      },
+      "operatorUsesPassengerSeat": null,
+      "unverified": ["capacity"]
     },
     {
       "presetId": "auvetech-mica",
@@ -36,8 +38,11 @@
       "autonomyLevel": null,
       "sources": {
         "capacity": "HICity運行概要（ソフトバンク 2023年12月25日発表 https://www.softbank.jp/drive/press/2023/20231225_01/）「乗車定員 8人 ※オペレーターを含む」",
-        "operatorOnBoard": "同上（定員にオペレーターを含むとの記載）"
-      }
+        "operatorOnBoard": "同上（定員にオペレーターを含むとの記載）",
+        "operatorUsesPassengerSeat": "同上（定員8人にオペレーターを含む＝オペレーターも乗車定員の1人として数えている）"
+      },
+      "operatorUsesPassengerSeat": true,
+      "unverified": []
     },
     {
       "presetId": "tier4-minibus",
@@ -60,7 +65,9 @@
         "maxSpeedKmh": "同上「35 km/h（手動時は70km/h）」",
         "rangeKm": "同上「航続距離（参考値）約150km」",
         "chargeHours": "同上「充電時間 CHAdeMO 約2時間／AC三相400V 約2時間」"
-      }
+      },
+      "operatorUsesPassengerSeat": null,
+      "unverified": []
     },
     {
       "presetId": "tier4-minibus2",
@@ -83,7 +90,9 @@
         "maxSpeedKmh": "同上「35 km/h（手動時は70km/h）」",
         "rangeKm": "同上「航続距離（参考値）約200km」",
         "chargeHours": "同上「充電時間 CHAdeMO 約1.5時間（AC 約2時間）」"
-      }
+      },
+      "operatorUsesPassengerSeat": null,
+      "unverified": []
     }
   ]
 }

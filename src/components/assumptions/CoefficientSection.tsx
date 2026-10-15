@@ -86,8 +86,7 @@ export function CoefficientSection({
           出典：{coefficients.survey.name}（{coefficients.survey.provider}）。
           {Object.values(coefficients.tables).join(' ／ ')}。
           年齢区分は調査の区分をそのまま使っています（Q3：B）。
-          {coefficients.ageMapping['0-4']?.provisional &&
-            '0〜4歳は調査の対象外のため、暫定で5〜14歳の値を使っています（確認事項 Q2 が未決定）。'}
+          {coefficients.ageMapping['0-4']?.note}
         </p>
         <div style={{ overflowX: 'auto' }}>
           <table className="table" aria-label="係数の表">

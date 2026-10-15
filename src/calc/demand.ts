@@ -108,7 +108,8 @@ export type DemandInput = {
   /** 集計単位ごとの人口（5年刻み） */
   population: { years: number[]; units: Map<string, AgePop[]> }
   coefficients: Coefficients
-  captureRate: number
+  /** 路線捕捉率。数値なら全バス停・全日種別に同じ値、関数ならバス停・日種別ごと（確認事項 Q5） */
+  captureRate: number | ((stopId: string, dayType: DayType) => number)
   serviceFactor: number
   fareFactor: number
   /** シナリオ係数（楽観・悲観シナリオで、標準シナリオの需要を±%する。省略＝1。F-7-2） */
@@ -175,7 +176,11 @@ export function computeDemand(input: DemandInput): YearDemand[] {
       input.ageClasses.forEach((age, k) => {
         for (const dayType of DAY_TYPES) {
           const c = input.coefficients[dayType][age]
-          const v = st.pop[k] * c.outingRate * c.tripRate * c.busShare * input.captureRate
+          const capture =
+            typeof input.captureRate === 'number'
+              ? input.captureRate
+              : input.captureRate(st.stopId, dayType)
+          const v = st.pop[k] * c.outingRate * c.tripRate * c.busShare * capture
           terms.push({
             stopId: st.stopId,
             age,
@@ -184,7 +189,7 @@ export function computeDemand(input: DemandInput): YearDemand[] {
             outingRate: c.outingRate,
             tripRate: c.tripRate,
             busShare: c.busShare,
-            captureRate: input.captureRate,
+            captureRate: capture,
             dailyBase: v,
           })
           dailyBase[dayType] += v

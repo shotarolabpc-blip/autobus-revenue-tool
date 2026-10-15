@@ -7,22 +7,28 @@ export type VehicleSpec = {
   seats: number | null
   standingAllowed: boolean | null
   operatorOnBoard: boolean | null
+  operatorUsesPassengerSeat: boolean | null
   operatorCount: number | null
   rangeKm: number | null
   chargeHours: number | null
 }
 
 /**
- * 実効定員 ＝ 運用定員 − 乗車する保安要員の人数（立席を使わない場合は座席数ベース）。F-3A-3。
- * 必要な値が未入力なら null（画面では「要入力」）。
+ * 実効定員（確認事項 Q6）。乗客が使える人数。
+ *  - 立席を使わない車両は座席数（乗客用。運転席・保安要員専用の席は含まない）、それ以外は運用定員をもとにする
+ *  - 保安要員が乗らなければ、そのまま
+ *  - 保安要員が乗り、客席（座席）を使うなら、保安要員の人数を引く。専用席（運転席など）に座るなら引かない
+ * 必要な値が未入力なら null（画面では「要入力」。値を推測で補わない）。F-3A-3。
  */
 export function effectiveCapacity(v: VehicleSpec): number | null {
   const base = v.standingAllowed === false && v.seats !== null ? v.seats : v.capacity
   if (base === null) return null
   if (v.operatorOnBoard === null) return null
-  const ops = v.operatorOnBoard ? v.operatorCount : 0
-  if (ops === null) return null
-  return Math.max(0, base - ops)
+  if (!v.operatorOnBoard) return base
+  if (v.operatorUsesPassengerSeat === null) return null
+  if (!v.operatorUsesPassengerSeat) return base
+  if (v.operatorCount === null) return null
+  return Math.max(0, base - v.operatorCount)
 }
 
 /** 1日の輸送力 ＝ 実効定員 × 便数 × 最大乗車率（F-3A-4） */

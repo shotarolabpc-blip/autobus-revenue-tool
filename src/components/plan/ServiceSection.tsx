@@ -25,7 +25,7 @@ type Props = {
 
 const VEHICLE_FIELDS: { key: keyof Vehicle; label: string; unit?: string }[] = [
   { key: 'capacity', label: '定員（公道・自動運転時の運用定員）', unit: '人' },
-  { key: 'seats', label: '座席数', unit: '席' },
+  { key: 'seats', label: '座席数（乗客用。運転席・保安要員専用の席は含まない）', unit: '席' },
   { key: 'operatorCount', label: '保安要員の人数', unit: '人' },
   { key: 'maxSpeedKmh', label: '最高速度', unit: 'km/h' },
   { key: 'avgSpeedKmh', label: '運行平均速度', unit: 'km/h' },
@@ -51,7 +51,9 @@ export function ServiceSection({
     // 値を手で変えたら、その値の出典は「ユーザー入力」にする
     const sources = { ...v.sources }
     for (const k of Object.keys(patch)) sources[k] = 'ユーザー入力'
-    setService({ vehicle: { ...v, ...patch, sources } })
+    // 手で入れ直した値は、出典未確認ではなくなる
+    const unverified = v.unverified.filter((k) => !(k in patch))
+    setService({ vehicle: { ...v, ...patch, sources, unverified } })
   }
 
   const allPresets: Vehicle[] = [...presets.items, ...project.userVehiclePresets, emptyVehicle()]
@@ -134,7 +136,13 @@ export function ServiceSection({
                 value={v[f.key] as number | null}
                 required={['capacity', 'operatorCount', 'avgSpeedKmh'].includes(f.key)}
                 onChange={(x) => setVehicle({ [f.key]: x })}
-                hint={v.sources[f.key] ? `出典：${v.sources[f.key]}` : undefined}
+                hint={
+                  v.unverified.includes(f.key)
+                    ? `【要確認】出典が確認できていない値です。${v.sources[f.key] ?? ''}`
+                    : v.sources[f.key]
+                      ? `出典：${v.sources[f.key]}`
+                      : undefined
+                }
               />
             ),
           )}
@@ -154,6 +162,20 @@ export function ServiceSection({
             no="乗車しない"
             hint={v.sources.operatorOnBoard ? `出典：${v.sources.operatorOnBoard}` : undefined}
           />
+          {v.operatorOnBoard === true && (
+            <TriField
+              label="保安要員は客席（座席）を使う"
+              value={v.operatorUsesPassengerSeat}
+              onChange={(x) => setVehicle({ operatorUsesPassengerSeat: x })}
+              yes="使う（座席数から人数を引く）"
+              no="使わない（運転席などの専用席）"
+              hint={
+                v.sources.operatorUsesPassengerSeat
+                  ? `出典：${v.sources.operatorUsesPassengerSeat}`
+                  : '座席数・定員から保安要員を引くかを決める項目です。分からないときは要入力のままにしてください'
+              }
+            />
+          )}
           <TriField
             label="車椅子対応"
             value={v.wheelchair}

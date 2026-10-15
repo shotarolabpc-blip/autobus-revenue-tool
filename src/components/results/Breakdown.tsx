@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AGE_CLASSES_7, groupPopulation } from '../../calc/ageClasses'
-import { stopAnnualRiders, type ScenarioResult } from '../../calc/pipeline'
+import { CAPTURE_LABELS, stopAnnualRiders, type ScenarioResult } from '../../calc/pipeline'
 import { fmt } from '../../util/format'
 
 const sum = (a: number[]) => a.reduce((x, y) => x + y, 0)
@@ -128,11 +128,32 @@ export function Breakdown({ result }: { result: ScenarioResult }) {
         </table>
       </div>
       <p className="hint">
-        各行は「勢圏人口 × 外出率 × 1日トリップ数 × バス分担率 × 路線捕捉率（
-        {fmt(result.captureRate, 2)}
-        ）」です。 都市類型：{result.cityType.name}。0〜4歳の係数は暫定で5〜14歳の値です（確認事項
-        Q2）。
+        各行は「勢圏人口 × 外出率 × 1日トリップ数 × バス分担率 × 路線捕捉率」です。都市類型：
+        {result.cityType.name}。0〜4歳は需要に数えていません（調査の対象外。確認事項 Q2）。
       </p>
+      <table className="table" aria-label="路線捕捉率">
+        <thead>
+          <tr>
+            <th>バス停</th>
+            <th className="num">平日</th>
+            <th className="num">土休日</th>
+            <th>決め方</th>
+          </tr>
+        </thead>
+        <tbody>
+          {result.captures.map((c) => (
+            <tr key={c.stopId}>
+              <td>{c.name}</td>
+              <td className="num">{c.status === 'unset' ? '未設定' : pct(c.weekday)}</td>
+              <td className="num">{c.status === 'unset' ? '未設定' : pct(c.holiday)}</td>
+              <td>
+                {CAPTURE_LABELS[c.status]}
+                {c.status === 'unset' && '（計算は100%）'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <h4>3. 補正と年間への換算</h4>
       <table className="table" aria-label="補正と年間への換算">

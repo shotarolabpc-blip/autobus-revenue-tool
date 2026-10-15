@@ -202,7 +202,16 @@ describe('移行（マイグレーション）', () => {
   })
 })
 
-describe('移行 1.0 → 1.1（停車順の追加）→ 1.2（上限運賃の追加）', () => {
+describe('移行 1.0 → 1.1（停車順の追加）→ 1.2（上限運賃の追加）→ 1.3（捕捉率・保安要員の客席）', () => {
+  /** 1.3 で足した項目を取り除く（古い形式のファイルにはない） */
+  function stripV13(f: ReturnType<typeof sample>) {
+    for (const sc of f.scenarios) {
+      delete (sc as Record<string, unknown>).stopCapture
+      delete (sc.service.vehicle as Record<string, unknown>).operatorUsesPassengerSeat
+      delete (sc.service.vehicle as Record<string, unknown>).unverified
+    }
+  }
+
   /** 1.0 形式のファイル：route に sequence がなく、stops の順が停車順 */
   function v10Project() {
     let s = createScenario('標準', defaults)
@@ -219,6 +228,7 @@ describe('移行 1.0 → 1.1（停車順の追加）→ 1.2（上限運賃の追
     old.schemaVersion = '1.0'
     delete old.scenarios[0].route.sequence
     delete old.scenarios[0].fare.upperLimit
+    stripV13(old)
     return { current: p, old }
   }
 
@@ -227,8 +237,8 @@ describe('移行 1.0 → 1.1（停車順の追加）→ 1.2（上限運賃の追
     const r = parseProjectFile(JSON.stringify(old))
     expect(r.ok).toBe(true)
     if (!r.ok) return
-    expect(r.migrated).toEqual(['1.0→1.1', '1.1→1.2'])
-    expect(r.project.schemaVersion).toBe('1.2')
+    expect(r.migrated).toEqual(['1.0→1.1', '1.1→1.2', '1.2→1.3'])
+    expect(r.project.schemaVersion).toBe('1.3')
     const route = r.project.scenarios[0].route
     expect(route.sequence).toEqual(['a', 'b', 'c'])
     expect(route.segments).toEqual(current.scenarios[0].route.segments)
@@ -240,13 +250,31 @@ describe('移行 1.0 → 1.1（停車順の追加）→ 1.2（上限運賃の追
     const v11 = JSON.parse(JSON.stringify(current))
     v11.schemaVersion = '1.1'
     delete v11.scenarios[0].fare.upperLimit
+    stripV13(v11)
     const r = parseProjectFile(JSON.stringify(v11))
     expect(r.ok).toBe(true)
     if (!r.ok) return
-    expect(r.migrated).toEqual(['1.1→1.2'])
+    expect(r.migrated).toEqual(['1.1→1.2', '1.2→1.3'])
     expect(r.project.scenarios[0].fare.upperLimit).toBeNull()
     // 停車順などほかの項目はそのまま
     expect(r.project.scenarios[0].route.sequence).toEqual(['a', 'b', 'c'])
+  })
+
+  it('1.2 のファイルを読み込むと、捕捉率の設定は空、保安要員の客席は「乗車する→使う」と読み替える', () => {
+    const { current } = v10Project()
+    const v12 = JSON.parse(JSON.stringify(current))
+    v12.schemaVersion = '1.2'
+    stripV13(v12)
+    v12.scenarios[0].service.vehicle.operatorOnBoard = true
+    v12.scenarios[0].service.vehicle.operatorCount = 1
+    const r = parseProjectFile(JSON.stringify(v12))
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.migrated).toEqual(['1.2→1.3'])
+    expect(r.project.scenarios[0].stopCapture).toEqual([])
+    const v = r.project.scenarios[0].service.vehicle
+    expect(v.operatorUsesPassengerSeat).toBe(true)
+    expect(v.unverified).toEqual([])
   })
 
   it('入力した上限運賃は、保存して読み込むとそのまま戻る', () => {

@@ -5,7 +5,7 @@ import { z } from 'zod'
  * 形式を変えたら CURRENT_SCHEMA_VERSION を上げ、src/project/migrations/ に変換処理を追加すること。
  * 計算結果と人口メッシュは保存しない（読込時に再計算する。F-1-10）。
  */
-export const CURRENT_SCHEMA_VERSION = '1.2'
+export const CURRENT_SCHEMA_VERSION = '1.3'
 
 /** 年齢階層（要件 5.1「最低 0-14／15-64／65-74／75歳以上」） */
 export const AGE_CLASSES = ['0-14', '15-64', '65-74', '75+'] as const
@@ -66,9 +66,17 @@ export const vehicleSchema = z.object({
   name: z.string(),
   /** 公道・自動運転時の運用定員 */
   capacity: nonNegative.nullable(),
+  /** 乗客用の座席数（運転席・保安要員専用の席は含まない） */
   seats: nonNegative.nullable(),
   standingAllowed: z.boolean().nullable(),
   operatorOnBoard: z.boolean().nullable(),
+  /**
+   * 保安要員が客席（座席）を使うか。使う車両は座席数から保安要員の人数を引き、専用席（運転席など）に座る車両は引かない。
+   * 未入力＝要入力（値を推測で補わない。確認事項 Q6、schemaVersion 1.3 で追加）
+   */
+  operatorUsesPassengerSeat: z.boolean().nullable(),
+  /** 出典が未確認の項目名（例：['capacity']）。結果の警告に併記する（確認事項 Q7、schemaVersion 1.3 で追加） */
+  unverified: z.array(z.string()),
   operatorCount: nonNegative.nullable(),
   maxSpeedKmh: nonNegative.nullable(),
   avgSpeedKmh: nonNegative.nullable(),
@@ -156,6 +164,22 @@ export const coefficientOverrideSchema = z.object({
   source: z.string().min(1),
 })
 
+/**
+ * 路線捕捉率の設定（バス停ごと。確認事項 Q5、schemaVersion 1.3 で追加）。
+ * 勢圏が既存のバス路線と重なるバス停で、次のどちらかを選ぶ。設定がないあいだは「捕捉率 未設定」と表示する。
+ *   trips：重なる既存路線の便数を入力して按分（捕捉率 ＝ 本路線の便数 ÷（本路線の便数 ＋ 既存路線の便数の合計）。平日と土休日で別々）
+ *   direct：捕捉率を直接入力
+ */
+export const stopCaptureSchema = z.object({
+  stopId: id,
+  mode: z.enum(['trips', 'direct']),
+  /** 重なる既存路線の1日あたり便数の合計（trips のとき使う） */
+  existingWeekdayTrips: nonNegative,
+  existingHolidayTrips: nonNegative,
+  /** 直接入力した捕捉率（direct のとき使う） */
+  rate: ratio,
+})
+
 export const coefficientsSchema = z.object({
   /** 都市類型の手動指定。null なら対象自治体から自動判定 */
   cityTypeOverride: z.string().nullable(),
@@ -226,6 +250,8 @@ export const scenarioSchema = z.object({
   service: serviceSchema,
   fare: fareSchema,
   coefficients: coefficientsSchema,
+  /** バス停ごとの路線捕捉率の設定（重なるバス停だけ。空＝すべて未設定） */
+  stopCapture: z.array(stopCaptureSchema),
   /** エリア全体の人口補正率（%／年。F-5-3） */
   areaPopulationAdjustPctPerYear: z.number(),
   developments: z.array(developmentSchema),
@@ -286,6 +312,7 @@ export type Vehicle = z.infer<typeof vehicleSchema>
 export type Service = z.infer<typeof serviceSchema>
 export type Fare = z.infer<typeof fareSchema>
 export type FareCategory = z.infer<typeof fareCategorySchema>
+export type StopCapture = z.infer<typeof stopCaptureSchema>
 export type Coefficients = z.infer<typeof coefficientsSchema>
 export type Development = z.infer<typeof developmentSchema>
 export type FacilityDemand = z.infer<typeof facilityDemandSchema>

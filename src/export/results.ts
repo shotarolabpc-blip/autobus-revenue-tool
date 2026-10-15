@@ -7,7 +7,7 @@
  */
 import { fareTableFromDistances } from '../calc/fare'
 import { fareSettings, overridesByIndex } from '../calc/fareInputs'
-import { stopAnnualRiders, type ScenarioResult } from '../calc/pipeline'
+import { CAPTURE_LABELS, stopAnnualRiders, type ScenarioResult } from '../calc/pipeline'
 import { effectiveCapacity, dailyCapacity } from '../calc/service'
 import { AGE_CLASSES_7 } from '../calc/ageClasses'
 import { positionDistancesKm, stopToStopKm } from '../gis/route'
@@ -105,11 +105,21 @@ export function assumptionsSheet(ctx: ExportContext): Sheet {
     cf.survey.pageUrl,
     cf.ageMappingStatus,
   )
-  add(
-    '路線捕捉率',
-    r.captureRate,
-    sc.coefficients.routeCaptureOverride === null ? '既定（重複を考慮しない）' : 'ユーザー指定',
-  )
+  for (const c of r.captures) {
+    add(
+      `路線捕捉率：${c.name}`,
+      c.status === 'unset'
+        ? '未設定（計算は1.0）'
+        : `平日 ${Math.round(c.weekday * 1000) / 10}%／土休日 ${Math.round(c.holiday * 1000) / 10}%`,
+      CAPTURE_LABELS[c.status],
+      c.existing.length > 0
+        ? `勢圏の中の既存バス停：${c.existing
+            .slice(0, 5)
+            .map((e) => e.name)
+            .join('、')}${c.existing.length > 5 ? ' ほか' : ''}`
+        : '',
+    )
+  }
   add(
     '運行サービス補正係数',
     sc.coefficients.serviceFactor,
@@ -191,7 +201,7 @@ export function assumptionsSheet(ctx: ExportContext): Sheet {
       ? '均一制'
       : r.fareMethod === 'avgRideKm'
         ? '平均乗車距離の運賃'
-        : '各バス停から先のバス停へ均等に降車すると仮定した運賃表の平均',
+        : '乗るバス停・降りるバス停の推計乗車数で重み付けした運賃表の平均',
   )
   // 運賃の前提・注意（F-4A）
   const fare = fareAssumptionRows(project, sc, ctx.fareRefs.items, isoDay(ctx.now))

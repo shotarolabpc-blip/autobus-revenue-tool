@@ -1,46 +1,46 @@
 /**
- * バス停の勢圏と、既存のバス路線の重なり（Q5：勢圏が既存路線と重なるときは警告し、路線捕捉率の入力を促す）。純粋関数のみ。
- * 国土数値情報のバス路線データ（N07 R4）には運行本数の項目がないため、便数比での自動按分はできない。
- * ここでは「重なっているか」だけを判定し、捕捉率はユーザーが手入力する。
+ * バス停の勢圏と、既存のバス停の重なり（確認事項 Q5）。純粋関数のみ。
+ *
+ * 「重なる」の判定：勢圏の円の中に、既存のバス停（国土数値情報のバス停データ）が1つでもあるか。
+ * 乗客はバス停で乗るので説明しやすく、閾値の数値が要らない。
+ * 国土数値情報のバス路線データ（N07 R4）には運行本数の項目がないため、便数は利用者に入力してもらう。
  */
-import { pointToSegmentM, type LngLat } from './route'
+import { distanceM } from './route'
 
-export type ExistingRoute = { coordinates: LngLat[]; operator: string | null }
-export type OverlapStop = { id: string; name: string; lng: number; lat: number; radiusM: number }
+export type ExistingStop = {
+  id: string
+  name: string
+  operator: string | null
+  lng: number
+  lat: number
+}
+export type OverlapStop = {
+  id: string
+  name: string
+  lng: number
+  lat: number
+  radiusM: number
+  /** 既存のバス停から採用したバス停の参照ID（その既存バス停自身は「重なり」に数えない） */
+  existingStopId: string | null
+}
 
-const EARTH_R = 6371008.8
-const RAD = Math.PI / 180
-
-/** バス停ごとに、勢圏（円）と重なる既存路線の事業者名（重複なし）を返す。重ならないバス停は含めない */
-export function overlappingOperators(
+/** バス停ごとに、勢圏（円）の中にある既存バス停を返す。1つもないバス停は含めない */
+export function existingStopsInCatchments(
   stops: OverlapStop[],
-  routes: ExistingRoute[],
-): Map<string, string[]> {
-  const out = new Map<string, string[]>()
+  existing: ExistingStop[],
+): Map<string, ExistingStop[]> {
+  const out = new Map<string, ExistingStop[]>()
   for (const st of stops) {
-    const dLat = st.radiusM / (EARTH_R * RAD)
-    const dLng = dLat / Math.cos(st.lat * RAD)
-    const found = new Set<string>()
-    for (const r of routes) {
-      // 大まかな範囲で絞ってから、線分ごとに距離を測る
-      let near = false
-      for (const c of r.coordinates) {
-        if (Math.abs(c[0] - st.lng) <= dLng * 2 && Math.abs(c[1] - st.lat) <= dLat * 2) {
-          near = true
-          break
-        }
-      }
-      if (!near) continue
-      for (let i = 0; i < r.coordinates.length - 1; i++) {
-        if (
-          pointToSegmentM([st.lng, st.lat], r.coordinates[i], r.coordinates[i + 1]) <= st.radiusM
-        ) {
-          found.add(r.operator ?? '事業者不明')
-          break
-        }
-      }
-    }
-    if (found.size > 0) out.set(st.id, [...found].sort())
+    const found = existing.filter(
+      (e) =>
+        e.id !== st.existingStopId && distanceM([st.lng, st.lat], [e.lng, e.lat]) <= st.radiusM,
+    )
+    if (found.length > 0) out.set(st.id, found)
   }
   return out
+}
+
+/** 重なる既存バス停の事業者名（重複なし・五十音順） */
+export function operatorsOf(stops: ExistingStop[]): string[] {
+  return [...new Set(stops.map((s) => s.operator ?? '事業者不明'))].sort()
 }

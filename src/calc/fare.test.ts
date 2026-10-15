@@ -127,11 +127,28 @@ describe('対キロ区間制の平均運賃', () => {
       method: 'avgRideKm',
     })
   })
-  it('なければ乗車数で重み付けし、行き先は均等とみなす', () => {
-    // バス停0：(190+250)/2=220、1：(190+210)/2=200、2：(250+210)/2=230。乗車数 2:1:1 → (440+200+230)/4=217.5
+  it('なければ、乗るバス停・降りるバス停の乗車数で重み付けする（確認事項 Q10）', () => {
+    // 運賃：0-1＝190、0-2＝250、1-2＝210。乗車数 2:1:1。重み＝乗車数(乗)×乗車数(降)
+    // 0-1：2×1×2方向＝4、0-2：4、1-2：1×1×2方向＝2 → (4×190＋4×250＋2×210)÷10＝218
     const r = averageDistanceFare(table, [2, 1, 1], false, dist, null)
-    expect(r.method).toBe('uniformAlighting')
-    expect(r.fare).toBeCloseTo(217.5)
+    expect(r.method).toBe('destinationWeighted')
+    expect(r.fare).toBeCloseTo(218)
+  })
+  it('乗車数がすべて同じなら、行き先を均等とみなした単純平均と同じ（(190+250+210)÷3＝216.67）', () => {
+    expect(averageDistanceFare(table, [5, 5, 5], false, dist, null).fare).toBeCloseTo(650 / 3)
+  })
+  it('乗車数がすべて0なら、全バス停を同じ重みにする。バス停が1つなら0', () => {
+    expect(averageDistanceFare(table, [0, 0, 0], false, dist, null).fare).toBeCloseTo(650 / 3)
+    expect(averageDistanceFare([[null]], [1], false, dist, null).fare).toBe(0)
+  })
+  it('循環ルート（進行方向の距離で運賃表が非対称）でも、運賃表のとおりに平均する', () => {
+    // 循環で 0→1 が 1km、1→0 が 4km（周回5km）の2バス停。乗車数 1:1 → (0→1 と 1→0 の運賃の平均)
+    const loopTable = fareTable([0, 1], true, 5, dist)
+    const a = loopTable[0][1] as number
+    const b = loopTable[1][0] as number
+    expect(a).toBe(190)
+    expect(b).toBe(310)
+    expect(averageDistanceFare(loopTable, [1, 1], true, dist, null).fare).toBeCloseTo((a + b) / 2)
   })
 })
 

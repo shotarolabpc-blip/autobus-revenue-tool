@@ -165,3 +165,30 @@ test('Excel・CSV（BOM付き）・PNG が出力でき、出典・前提が入�
   await png.saveAs(pngPath)
   expect([...readFileSync(pngPath).subarray(1, 4)]).toEqual([0x50, 0x4e, 0x47]) // "PNG"
 })
+
+test('既存バス停と重なると「路線捕捉率 未設定」と警告し、便数を入れて按分できる（確認事項 Q5）', async ({
+  page,
+}) => {
+  await createProject(page)
+  await page.goto('/#/results')
+  await expect(page.getByText('路線捕捉率 未設定')).toBeVisible({ timeout: 30_000 })
+
+  await page.goto('/#/assumptions')
+  const card = page
+    .locator('.card', { hasText: '路線捕捉率（既存のバス路線と重なるバス停）' })
+    .first()
+  await expect(card.getByText('バス停「三鷹駅」')).toBeVisible({ timeout: 30_000 })
+  await card.getByLabel('三鷹駅の捕捉率の決め方').getByText('既存路線の便数を入力して按分').click()
+  await card.getByLabel('重なる既存路線の便数の合計（平日）').fill('300')
+  await card.getByLabel('重なる既存路線の便数の合計（土休日）').fill('300')
+  await expect(card.getByText('平日 25.0%／土休日 25.0%').first()).toBeVisible()
+
+  // 三鷹駅は按分済み。ほかのバス停が重なっていれば、まだ未設定の表示が残る
+  await page.goto('/#/results')
+  await expect(page.getByRole('table', { name: '年度別の延べ乗車人員と収入' })).toBeVisible({
+    timeout: 30_000,
+  })
+  await expect(page.getByRole('table', { name: '路線捕捉率' })).toContainText(
+    '既存路線の便数を入力して按分',
+  )
+})

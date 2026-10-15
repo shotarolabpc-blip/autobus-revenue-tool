@@ -1,5 +1,5 @@
 import type { z } from 'zod'
-import type { ExistingRoute } from '../gis/overlap'
+import type { ExistingStop } from '../gis/overlap'
 import {
   attributionsFileSchema,
   cityTypesFileSchema,
@@ -76,29 +76,28 @@ export const loadCoefficients = (): Promise<CoefficientsFile> =>
 export const loadCityTypes = (): Promise<CityTypesFile> =>
   cached('city_types.json', cityTypesFileSchema)
 
-/** 既存のバス路線（国土数値情報）。読み込めない都道府県は null（重なりの警告を出さない） */
-export async function loadBusRoutes(prefCode: string): Promise<ExistingRoute[] | null> {
+/** 既存のバス停（国土数値情報）。読み込めない都道府県は null（重なりの判定をしない） */
+export async function loadBusStops(prefCode: string): Promise<ExistingStop[] | null> {
   try {
-    const res = await fetch(dataUrl(`busroutes/${prefCode}.geojson`))
+    const res = await fetch(dataUrl(`busstops/${prefCode}.geojson`))
     if (!res.ok) return null
     const json = (await res.json()) as {
       features?: {
         geometry?: { type?: string; coordinates?: unknown }
-        properties?: { operator?: string | null }
+        properties?: { id?: string; name?: string; operator?: string | null }
       }[]
     }
-    const out: ExistingRoute[] = []
+    const out: ExistingStop[] = []
     for (const f of json.features ?? []) {
-      const g = f.geometry
-      if (g?.type === 'LineString') {
-        out.push({
-          coordinates: g.coordinates as [number, number][],
-          operator: f.properties?.operator ?? null,
-        })
-      } else if (g?.type === 'MultiLineString') {
-        for (const line of g.coordinates as [number, number][][])
-          out.push({ coordinates: line, operator: f.properties?.operator ?? null })
-      }
+      if (f.geometry?.type !== 'Point') continue
+      const [lng, lat] = f.geometry.coordinates as [number, number]
+      out.push({
+        id: f.properties?.id ?? `${lng},${lat}`,
+        name: f.properties?.name ?? '',
+        operator: f.properties?.operator ?? null,
+        lng,
+        lat,
+      })
     }
     return out
   } catch {
