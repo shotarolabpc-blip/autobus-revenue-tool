@@ -8,7 +8,10 @@ import {
   REFERENCE_CSV_HEADER,
   type Kpi,
 } from '../../calc/reference'
+import { loadReferenceActuals } from '../../data/staticData'
+import { useAsync } from '../../data/useAsync'
 import { downloadBlob } from '../../export/download'
+import { BundledReferences } from './BundledReferences'
 import { newId } from '../../project/factory'
 import type { ProjectFile, Scenario, UserReference } from '../../project/schema'
 import { useProjectStore } from '../../project/store'
@@ -33,6 +36,7 @@ const empty = (): UserReference => ({
 /** 参考実績との比較（F-5-6〜F-5-8）：推計の桁感を、既存路線の実績と並べて確かめる */
 export function ReferenceCompare({ project, scenario, result }: Props) {
   const refs = project.userReferenceData
+  const bundled = useAsync(loadReferenceActuals)
   const [draft, setDraft] = useState<UserReference>(empty)
   const [errors, setErrors] = useState<string[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
@@ -69,8 +73,9 @@ export function ReferenceCompare({ project, scenario, result }: Props) {
         事業者から入手した実績や、公開されている路線の実績を入れると、推計と並べて桁を確かめられます。
         推計は、初年度（{y?.fiscalYear}年度）の値です。
         実績はこのプロジェクトのファイルに含めて保存されます（外部へは送りません）。
-        同梱の参考実績データ（都営バスの系統別収支など）は、PDFからの読み取りに人の確認が必要なため、まだ入っていません。
       </p>
+
+      {bundled.status === 'ready' && <BundledReferences data={bundled.data} existing={refs} />}
 
       <h4>実績を追加</h4>
       <div className="field-grid">

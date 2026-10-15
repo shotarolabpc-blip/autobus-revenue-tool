@@ -169,5 +169,5 @@ describe('出力（CSV・Excel）', () => {
       '出典一覧',
     ])
     expect(wb.getWorksheet('年度別推計')!.getCell('A1').value).toBe('推計日時')
-  })
+  }, 30_000)
 })

@@ -136,3 +136,33 @@ describe('運賃の参考データ（public/data/fare_references.json）', () =>
     expect(maxLimit).toBeGreaterThanOrEqual(maxMarket)
   })
 })
+
+describe('同梱の参考実績・配信する都道府県', () => {
+  it('参考実績は、すべての項目に出典と確認日がある（空でもよい）', async () => {
+    const { referenceActualsFileSchema } = await import('../src/data/schemas')
+    const f = referenceActualsFileSchema.parse(read('reference_actuals.json'))
+    for (const i of f.items) {
+      expect(i.source.url).toMatch(/^https?:/)
+      expect(i.source.checkedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    }
+  })
+
+  it('データがあるとした都道府県には、人口・バス停・バス路線・市区町村・道路網がそろっている', async () => {
+    const { existsSync } = await import('node:fs')
+    const pref = prefecturesFileSchema.parse(read('prefectures.json'))
+    const have = pref.items.filter((p) => p.dataAvailable)
+    expect(have.map((p) => p.code).sort()).toEqual(['11', '12', '13', '14'])
+    for (const p of have) {
+      expect(p.view).not.toBeNull()
+      for (const f of [
+        `population/${p.code}/index.json`,
+        `busstops/${p.code}.geojson`,
+        `busroutes/${p.code}.geojson`,
+        `municipalities/${p.code}.json`,
+        `roads/${p.code}`,
+      ]) {
+        expect(existsSync(new URL(`../public/data/${f}`, import.meta.url)), f).toBe(true)
+      }
+    }
+  })
+})

@@ -4,6 +4,7 @@ import { RoutePanel } from '../components/RoutePanel'
 import { loadAttributions, loadBasemaps, loadDefaults, loadPrefectures } from '../data/staticData'
 import { useAsync } from '../data/useAsync'
 import { BasemapSwitcher } from '../map/BasemapSwitcher'
+import { LocationPicker } from '../map/LocationPicker'
 import { MapView } from '../map/MapView'
 import { ReferenceLayers } from '../map/ReferenceLayers'
 import { ResultLayers } from '../map/ResultLayers'
@@ -73,6 +74,7 @@ export function MapPage() {
         initialView={pref?.view ?? null}
         onMapReady={setMap}
       />
+      {map && <LocationPicker map={map} />}
       <div className="map-overlay-top-left">
         <BasemapSwitcher items={basemaps.items} value={basemap.id} onChange={changeBasemap} />
         {map && (

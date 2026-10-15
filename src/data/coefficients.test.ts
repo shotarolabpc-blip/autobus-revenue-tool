@@ -67,6 +67,22 @@ describe('都市類型の判定', () => {
     expect(judgeCityType(file, types, '13', null, null).code).toBe(100)
     expect(judgeCityType(file, types, '13', '13204', '2')).toMatchObject({ code: 2, auto: false })
   })
+  it('関東の中心都市（さいたま・千葉・横浜・川崎）と、調査の対象に挙がっている周辺都市', () => {
+    for (const [pref, city, code] of [
+      ['11', '11103', 1],
+      ['12', '12102', 1],
+      ['14', '14104', 1],
+      ['14', '14133', 1],
+      ['11', '11208', 2],
+      ['12', '12207', 2],
+      ['14', '14206', 3],
+    ] as const) {
+      expect(judgeCityType(file, types, pref, city, null), city).toMatchObject({ code, auto: true })
+    }
+    // 調査の対象に挙がっていない市（相模原市・川越市など）は自動判定しない
+    expect(judgeCityType(file, types, '14', '14150', null).auto).toBe(false)
+    expect(judgeCityType(file, types, '11', '11201', null).auto).toBe(false)
+  })
   it('他県の同じ番号の範囲には当てはまらない', () => {
     expect(judgeCityType(file, types, '27', '13101', null).code).toBe(100)
   })

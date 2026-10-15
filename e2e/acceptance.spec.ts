@@ -192,3 +192,47 @@ test('既存バス停と重なると「路線捕捉率 未設定」と警告し�
     '既存路線の便数を入力して按分',
   )
 })
+
+test('開発計画の場所を、地図のクリックで選べる（F-5-1）', async ({ page }) => {
+  await createProject(page)
+  await page.goto('/#/assumptions')
+  await page.getByRole('button', { name: '＋ 開発計画を追加' }).click()
+  const lat = page.getByLabel('緯度')
+  const before = await lat.inputValue()
+  await page.getByRole('button', { name: '地図で位置を選ぶ' }).click()
+  await expect(page).toHaveURL(/#\/map/)
+  await expect(page.getByText('の場所を、地図をクリックして選んでください')).toBeVisible()
+  const map = page.getByTestId('map')
+  await expect(map).toBeVisible()
+  const box = (await map.boundingBox())!
+  // 画面の左上寄り（パネルのない場所）をクリックする
+  await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.85)
+  await expect(page).toHaveURL(/#\/assumptions/)
+  await expect(page.getByLabel('緯度')).not.toHaveValue(before)
+})
+
+test('東京都以外（神奈川県・横浜市）でも、同じ作りで推計できる（都道府県コードを引数にする作り）', async ({
+  page,
+}) => {
+  await page.goto('/#/project')
+  await page.getByLabel('プロジェクト名').fill('E2Eテスト（横浜）')
+  await page.getByLabel('都道府県').selectOption('14')
+  await page.getByLabel('対象自治体（市区町村）').selectOption('14103')
+  await page.getByRole('button', { name: '作成する' }).click()
+  await page.evaluate(
+    SEED.replace('139.5606', '139.6155')
+      .replace('35.7027', '35.4658')
+      .replace('139.569', '139.62')
+      .replace('35.704', '35.4660')
+      .replace('139.577', '139.625')
+      .replace('35.706', '35.4680'),
+  )
+  const text = await resultsText(page)
+  expect(text).toMatch(/20[0-9][0-9]/)
+  // 横浜市は調査の中心都市（類型a）として自動判定される
+  await expect(page.getByText('推計の前提についての注意')).not.toContainText(
+    '都市類型を自動判定できない',
+  )
+  const m = await page.getByRole('table', { name: '路線捕捉率' }).count()
+  expect(m).toBe(1)
+})

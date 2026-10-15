@@ -65,14 +65,24 @@
     {
       "code": "11",
       "name": "埼玉県",
-      "view": null,
-      "dataAvailable": false
+      "view": [
+        138.7114,
+        35.7534,
+        139.9003,
+        36.2834
+      ],
+      "dataAvailable": true
     },
     {
       "code": "12",
       "name": "千葉県",
-      "view": null,
-      "dataAvailable": false
+      "view": [
+        139.7529,
+        34.8994,
+        140.8816,
+        36.1041
+      ],
+      "dataAvailable": true
     },
     {
       "code": "13",
@@ -88,8 +98,13 @@
     {
       "code": "14",
       "name": "神奈川県",
-      "view": null,
-      "dataAvailable": false
+      "view": [
+        138.9158,
+        35.1372,
+        139.8014,
+        35.6729
+      ],
+      "dataAvailable": true
     },
     {
       "code": "15",

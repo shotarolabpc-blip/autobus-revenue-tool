@@ -5,6 +5,8 @@ import {
   cityTypesFileSchema,
   type CityTypesFile,
   coefficientsFileSchema,
+  referenceActualsFileSchema,
+  type ReferenceActualsFile,
   type CoefficientsFile,
   basemapsFileSchema,
   defaultsFileSchema,
@@ -104,3 +106,6 @@ export async function loadBusStops(prefCode: string): Promise<ExistingStop[] | n
     return null
   }
 }
+
+export const loadReferenceActuals = (): Promise<ReferenceActualsFile> =>
+  cached('reference_actuals.json', referenceActualsFileSchema)

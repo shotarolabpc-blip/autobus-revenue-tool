@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router'
+import { usePickLocation } from '../../map/pickLocation'
 import { newId } from '../../project/factory'
 import type { Development, FacilityDemand, Scenario } from '../../project/schema'
 import { useProjectStore } from '../../project/store'
@@ -28,6 +30,7 @@ export function DemandInputsSection({ scenario, startFiscalYear, disabled }: Pro
       facilityDemand: s.facilityDemand.map((d) => (d.id === id ? { ...d, ...patch } : d)),
     }))
   const first = scenario.stops[0]
+  const navigate = useNavigate()
 
   return (
     <>
@@ -35,7 +38,7 @@ export function DemandInputsSection({ scenario, startFiscalYear, disabled }: Pro
         <h3>開発計画（住宅・マンションなど、人口が増える計画）</h3>
         <fieldset disabled={disabled} style={{ border: 0, padding: 0, margin: 0 }}>
           <p className="hint">
-            地点（緯度・経度）またはメッシュで場所を指定します。その場所を勢圏に含むバス停の人口に、開始年度から段階的に加わります。
+            地点（地図のクリック、または緯度・経度）またはメッシュで場所を指定します。その場所を勢圏に含むバス停の人口に、開始年度から段階的に加わります。
             勢圏に入らない計画は、計算に入れず、結果画面で知らせます。
           </p>
           {scenario.developments.map((d) => (
@@ -122,6 +125,22 @@ export function DemandInputsSection({ scenario, startFiscalYear, disabled }: Pro
                   onChange={(v) => setDev(d.id, { phaseYears: Math.max(1, Math.round(v ?? 1)) })}
                 />
               </div>
+              {d.location.type === 'point' && (
+                <p>
+                  <button
+                    type="button"
+                    className="btn btn-small"
+                    onClick={() => {
+                      usePickLocation
+                        .getState()
+                        .start({ scenarioId: scenario.id, developmentId: d.id, name: d.name })
+                      navigate('/map')
+                    }}
+                  >
+                    地図で位置を選ぶ
+                  </button>
+                </p>
+              )}
               <label className="inline-radio">
                 <input
                   type="checkbox"

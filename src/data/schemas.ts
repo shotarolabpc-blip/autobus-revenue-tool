@@ -245,3 +245,24 @@ export const cityTypesFileSchema = z.object({
   ),
 })
 export type CityTypesFile = z.infer<typeof cityTypesFileSchema>
+
+/** 同梱の参考実績（public/data/reference_actuals.json。data_build/build_reference_actuals.py が生成。F-5-5） */
+export const referenceActualsFileSchema = z.object({
+  checkedAt: z.string(),
+  note: z.string(),
+  items: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      operator: z.string(),
+      category: z.enum(['route', 'community', 'other']),
+      fiscalYear: z.number().int().nullable(),
+      dailyRiders: z.number().positive(),
+      dailyTrips: z.number().nullable(),
+      dailyFareRevenue: z.number().nullable(),
+      routeLengthKm: z.number().nullable(),
+      source: z.object({ title: z.string(), url: z.url(), checkedAt: z.string() }),
+    }),
+  ),
+})
+export type ReferenceActualsFile = z.infer<typeof referenceActualsFileSchema>
