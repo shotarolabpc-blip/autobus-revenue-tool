@@ -10,6 +10,7 @@
  * 根拠のない係数（立ち上がり・運賃弾力性・運行サービス補正）は、ユーザーが入力しない限り効かせない（5.1A）。
  */
 import { catchmentWeights, stopForPoint, type MeshUnit } from '../gis/catchment'
+import { overlappingOperators, type ExistingRoute } from '../gis/overlap'
 import { positionDistancesKm, routeKm, stopToStopKm } from '../gis/route'
 import type { CityTypeJudgement } from '../data/coefficients'
 import type { CoefficientsFile } from '../data/schemas'
@@ -45,6 +46,8 @@ export type PipelineData = {
   holidayData: HolidayData
   /** 消費税率（比率） */
   taxRate: number
+  /** 既存のバス路線（勢圏との重なりの警告に使う）。読み込めなかった場合は null */
+  existingRoutes?: ExistingRoute[] | null
 }
 
 export type FareMethod = 'flat' | 'avgRideKm' | 'uniformAlighting'
@@ -205,6 +208,29 @@ export function runScenario(
     const last = data.population.years[data.population.years.length - 1]
     if (years[0] < first || years[years.length - 1] > last) {
       warnings.push(`人口データは ${first}〜${last} 年です。範囲外の年度は端の年の値を使います。`)
+    }
+  }
+
+  // Q5：勢圏が既存のバス路線と重なるときは警告し、路線捕捉率の入力を促す（運行本数のデータがなく自動按分できないため）
+  if (scenario.coefficients.routeCaptureOverride === null && data.existingRoutes) {
+    const overlaps = overlappingOperators(
+      scenario.stops.map((s) => ({
+        id: s.id,
+        name: s.name,
+        lng: s.lng,
+        lat: s.lat,
+        radiusM: s.catchmentM,
+      })),
+      data.existingRoutes,
+    )
+    if (overlaps.size > 0) {
+      const names = scenario.stops.filter((s) => overlaps.has(s.id)).map((s) => s.name)
+      const ops = [...new Set([...overlaps.values()].flat())]
+      warnings.push(
+        `バス停${names.map((n) => `「${n}」`).join('')}の勢圏は、既存のバス路線（${ops.join('、')}）と重なっています。` +
+          '既存路線にも乗れる人がいるため、このままだと需要を多く見積もっている可能性があります。' +
+          '運行本数のデータがなく自動では按分できないため、「前提条件」画面の「路線捕捉率」に、本路線を使う割合を入力してください（空欄は100%の計算です）。',
+      )
     }
   }
 

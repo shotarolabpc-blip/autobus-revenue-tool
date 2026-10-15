@@ -14,6 +14,7 @@ import { positionDistancesKm, stopToStopKm } from '../gis/route'
 import { attributionText } from '../map/attribution'
 import type { Attribution, CoefficientsFile, FareReferencesFile } from '../data/schemas'
 import type { ProjectFile, Scenario } from '../project/schema'
+import { estimateKpi, ratio, referenceKpi } from '../calc/reference'
 import { fareAssumptionRows } from './fareNotes'
 import { withBom } from '../util/text'
 
@@ -331,12 +332,81 @@ export function sourceSheet(ctx: ExportContext): Sheet {
   return { name: '出典一覧', rows, headerRows: [meta.length] }
 }
 
+/** 参考実績との比較（F-5-6・F-5-7）。ユーザーが入れた実績がなければ、見出しと推計の行だけ */
+export function referenceSheet(ctx: ExportContext): Sheet {
+  const { result: r, scenario: sc } = ctx
+  const meta = metaRows(ctx)
+  const rows: Cell[][] = [
+    ...meta,
+    [
+      '路線',
+      '事業者',
+      '年度',
+      '1日の乗車人員',
+      '1便あたり乗車人数',
+      '平均運賃（円）',
+      '路線延長（km）',
+      '推計÷実績（1日の乗車人員）',
+      '推計÷実績（1便あたり）',
+      '推計÷実績（平均運賃）',
+      '出典',
+    ],
+  ]
+  const y = r.demand[0]
+  const rev = r.revenue[0]
+  const est =
+    y && rev
+      ? estimateKpi(y, rev, sc.service.weekdayTrips, sc.service.holidayTrips, r.routeKm)
+      : null
+  const n = (v: number | null, d = 1): Cell =>
+    v === null ? null : Math.round(v * 10 ** d) / 10 ** d
+  if (est) {
+    rows.push([
+      `推計（${r.scenarioName}）`,
+      'このツール',
+      y.fiscalYear,
+      n(est.dailyRiders),
+      n(est.perTrip),
+      n(est.avgFare),
+      n(est.routeLengthKm, 2),
+      null,
+      null,
+      null,
+      'このツールの推計（初年度）',
+    ])
+    for (const ref of ctx.project.userReferenceData) {
+      const k = referenceKpi(ref)
+      rows.push([
+        ref.name,
+        ref.operator,
+        ref.fiscalYear,
+        n(k.dailyRiders),
+        n(k.perTrip),
+        n(k.avgFare),
+        n(k.routeLengthKm, 2),
+        n(ratio(est.dailyRiders, k.dailyRiders), 2),
+        n(ratio(est.perTrip, k.perTrip), 2),
+        n(ratio(est.avgFare, k.avgFare), 2),
+        ref.source,
+      ])
+    }
+  }
+  if (ctx.project.userReferenceData.length === 0) {
+    rows.push(
+      [],
+      ['※参考実績は入力されていません（「推計結果」画面の「参考実績との比較」で追加できます）。'],
+    )
+  }
+  return { name: '参考実績比較', rows, headerRows: [meta.length] }
+}
+
 export function buildSheets(ctx: ExportContext): Sheet[] {
   return [
     assumptionsSheet(ctx),
     fareTableSheet(ctx),
     yearSheet(ctx),
     stopSheet(ctx),
+    referenceSheet(ctx),
     sourceSheet(ctx),
   ]
 }

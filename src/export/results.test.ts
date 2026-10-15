@@ -76,12 +76,13 @@ function context(): ExportContext {
 }
 
 describe('出力（CSV・Excel）', () => {
-  it('シートは 前提条件／運賃表／年度別推計／バス停別／出典一覧', () => {
+  it('シートは 前提条件／運賃表／年度別推計／バス停別／参考実績比較／出典一覧', () => {
     expect(buildSheets(context()).map((x) => x.name)).toEqual([
       '前提条件',
       '運賃表',
       '年度別推計',
       'バス停別',
+      '参考実績比較',
       '出典一覧',
     ])
   })
@@ -153,7 +154,7 @@ describe('出力（CSV・Excel）', () => {
     expect(csv.split('\r\n')[0]).toBe('﻿推計日時,' + (sheet.rows[0][1] as string))
   })
 
-  it('Excel：5つのシートを持つファイルができる（ブラウザ内で生成）', async () => {
+  it('Excel：6つのシートを持つファイルができる（ブラウザ内で生成）', async () => {
     const blob = await sheetsToXlsx(buildSheets(context()))
     expect(blob.size).toBeGreaterThan(5000)
     const { Workbook } = await import('exceljs')
@@ -164,6 +165,7 @@ describe('出力（CSV・Excel）', () => {
       '運賃表',
       '年度別推計',
       'バス停別',
+      '参考実績比較',
       '出典一覧',
     ])
     expect(wb.getWorksheet('年度別推計')!.getCell('A1').value).toBe('推計日時')

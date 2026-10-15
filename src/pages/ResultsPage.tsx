@@ -4,6 +4,8 @@ import { kpis } from '../calc/revenue'
 import { FareWarningsBox } from '../components/FareWarningsBox'
 import { Stat } from '../components/fields'
 import { Breakdown } from '../components/results/Breakdown'
+import { ReferenceCompare } from '../components/results/ReferenceCompare'
+import { resolveDerived } from '../calc/pipeline'
 import { ExportBar } from '../components/results/ExportBar'
 import { SERIES_COLORS } from '../components/results/chartUtil'
 import { SeriesChart } from '../components/results/SeriesChart'
@@ -49,6 +51,8 @@ export function ResultsPage() {
   if (state.status === 'error') return <p className="page-message error">{state.message}</p>
   if (!results || !detail) return null
 
+  const rawScenario = project.scenarios.find((x) => x.id === detail.scenarioId)
+  const detailScenario = rawScenario ? resolveDerived(project, rawScenario) : null
   const shown = results.filter((r) => shownIds.includes(r.scenarioId) && !r.blocked)
   const years = detail.fiscalYears
   const k = kpis(detail.revenue)
@@ -222,6 +226,9 @@ export function ResultsPage() {
 
           <YearTable result={detail} taxIncluded={taxIncluded} />
           <Breakdown result={detail} />
+          {detailScenario && (
+            <ReferenceCompare project={project} scenario={detailScenario} result={detail} />
+          )}
         </>
       )}
 

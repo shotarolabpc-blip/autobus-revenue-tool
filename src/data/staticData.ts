@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import type { ExistingRoute } from '../gis/overlap'
 import {
   attributionsFileSchema,
   cityTypesFileSchema,
@@ -74,3 +75,33 @@ export const loadCoefficients = (): Promise<CoefficientsFile> =>
 
 export const loadCityTypes = (): Promise<CityTypesFile> =>
   cached('city_types.json', cityTypesFileSchema)
+
+/** 既存のバス路線（国土数値情報）。読み込めない都道府県は null（重なりの警告を出さない） */
+export async function loadBusRoutes(prefCode: string): Promise<ExistingRoute[] | null> {
+  try {
+    const res = await fetch(dataUrl(`busroutes/${prefCode}.geojson`))
+    if (!res.ok) return null
+    const json = (await res.json()) as {
+      features?: {
+        geometry?: { type?: string; coordinates?: unknown }
+        properties?: { operator?: string | null }
+      }[]
+    }
+    const out: ExistingRoute[] = []
+    for (const f of json.features ?? []) {
+      const g = f.geometry
+      if (g?.type === 'LineString') {
+        out.push({
+          coordinates: g.coordinates as [number, number][],
+          operator: f.properties?.operator ?? null,
+        })
+      } else if (g?.type === 'MultiLineString') {
+        for (const line of g.coordinates as [number, number][][])
+          out.push({ coordinates: line, operator: f.properties?.operator ?? null })
+      }
+    }
+    return out
+  } catch {
+    return null
+  }
+}

@@ -6,6 +6,7 @@ import { useAsync } from '../data/useAsync'
 import { BasemapSwitcher } from '../map/BasemapSwitcher'
 import { MapView } from '../map/MapView'
 import { ReferenceLayers } from '../map/ReferenceLayers'
+import { ResultLayers } from '../map/ResultLayers'
 import { RouteEditor } from '../map/RouteEditor'
 import { useActiveScenario, useProjectStore } from '../project/store'
 import { useRouteComputation } from '../project/useRouteComputation'
@@ -30,7 +31,9 @@ export function MapPage() {
   const [map, setMap] = useState<MlMap | null>(null)
   const project = useProjectStore((s) => s.project?.project ?? null)
   const dataVersions = useProjectStore((s) => s.project?.dataVersions ?? NO_VERSIONS)
+  const projectFile = useProjectStore((s) => s.project)
   const scenario = useActiveScenario()
+  const [showResults, setShowResults] = useState(false)
   useRouteComputation(project?.municipality.prefCode ?? null)
 
   if (state.status !== 'ready') {
@@ -79,6 +82,27 @@ export function MapPage() {
             attributions={attributions}
             preferredYear={project?.startFiscalYear}
           />
+        )}
+        {projectFile && scenario && (
+          <div className="map-panel">
+            <label className="inline-radio">
+              <input
+                type="checkbox"
+                checked={showResults}
+                onChange={(e) => setShowResults(e.target.checked)}
+              />
+              推計結果を重ねる
+            </label>
+            {map && showResults && (
+              <ResultLayers
+                map={map}
+                project={projectFile}
+                scenarioId={scenario.id}
+                attributions={attributions}
+                basemapAttributionIds={basemap.attributionIds}
+              />
+            )}
+          </div>
         )}
       </div>
       {map && scenario && (

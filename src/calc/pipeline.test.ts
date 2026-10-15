@@ -321,3 +321,33 @@ describe('バス停別の年間延べ乗車人員', () => {
     expect(stopAnnualRiders(r.demand[0], 'none')).toBe(0)
   })
 })
+
+describe('既存路線との重なり（Q5）', () => {
+  const routes = [
+    {
+      coordinates: [
+        [center.lng - 0.002, center.lat],
+        [center.lng + 0.002, center.lat],
+      ] as [number, number][],
+      operator: '既存バス',
+    },
+  ]
+  it('重なるときは警告して捕捉率の入力を促す。計算は変えない', () => {
+    const { project, sc, data } = setup((s) => (s.stops[0].catchmentM = 300))
+    const withRoutes = runScenario(project, sc, { ...data, existingRoutes: routes })
+    const without = runScenario(project, sc, data)
+    expect(
+      withRoutes.warnings.some((x) => x.includes('既存のバス路線') && x.includes('路線捕捉率')),
+    ).toBe(true)
+    expect(withRoutes.demand[0].totalAnnual).toBe(without.demand[0].totalAnnual)
+  })
+  it('捕捉率を手入力したら警告しない', () => {
+    const { project, sc, data } = setup((s) => {
+      s.stops[0].catchmentM = 300
+      s.coefficients.routeCaptureOverride = 0.5
+    })
+    const r = runScenario(project, sc, { ...data, existingRoutes: routes })
+    expect(r.warnings.some((x) => x.includes('既存のバス路線'))).toBe(false)
+    expect(r.captureRate).toBe(0.5)
+  })
+})
