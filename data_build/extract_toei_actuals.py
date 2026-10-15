@@ -30,7 +30,7 @@ from common import DATA_RAW, download, setup_console
 
 REF_DIR = DATA_RAW / "reference" / "toei"
 OUT = DATA_RAW / "reference" / "actuals.csv"
-SOURCE_PAGE = "https://www.kotsu.metro.tokyo.jp/about/information/closing/{code}_closing.html"
+PDF_BASE = "https://www.kotsu.metro.tokyo.jp/about/information/closing/pdf/"
 OPENDATA_PDF = "https://www.opendata.metro.tokyo.lg.jp/kotsu/about/about_r05_closing_r05_closing05.pdf"
 
 
@@ -54,18 +54,18 @@ SOURCES = [
         OPENDATA_PDF,
     ),
     # 令和6・7年度は、東京都オープンデータの窓口にまだなく、東京都交通局のサイト（プログラムからの取得は拒否される）で公開。
-    # 利用者がブラウザで取得して置いたPDFを使う。TODO(根拠未確定)：PDFの正確なURLと利用条件を確認する
+    # 利用者がブラウザで取得して置いたPDFを使う（取得元のURLは利用者に教えてもらった）。TODO(根拠未確定)：利用条件を確認する
     Source(
         "r06_closing05.pdf",
         2024,
-        "東京都交通局 令和6年度 バス系統別収支状況（決算の公表ページに掲載のPDF）",
-        SOURCE_PAGE.format(code="r06"),
+        "東京都交通局 令和6年度 バス系統別収支状況（東京都交通局の決算の公表ページに掲載）",
+        PDF_BASE + "r06_closing05.pdf",
     ),
     Source(
         "r07_closing05.pdf",
         2025,
-        "東京都交通局 令和7年度 バス系統別収支状況（決算の公表ページに掲載のPDF）",
-        SOURCE_PAGE.format(code="r07"),
+        "東京都交通局 令和7年度 バス系統別収支状況（東京都交通局の決算の公表ページに掲載）",
+        PDF_BASE + "r07_closing05.pdf",
     ),
 ]
 
