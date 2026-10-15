@@ -43,6 +43,8 @@ export type FareReference = {
   ratePerKm: number | null
   source: { title: string; url: string; checkedAt: string; quote?: string }
   note?: string
+  /** 種別の分類の根拠（コミュニティバスは、自治体が運行主体、または委託・補助して運行していることを示す公式ページ） */
+  categoryBasis?: { text: string; url: string }
 }
 
 export type UpperLimit = NonNullable<Fare['upperLimit']>
@@ -302,7 +304,11 @@ export const ELASTICITY_ZERO_WARNING =
  * 「高め」の運賃（上限運賃以上）になっていて、運賃弾力性が0かどうか（F-4A-4）。
  * 「高め」のボタンで反映したかどうかは保存せず、運賃の値が高め以上かどうかで判定する
  * （手で同じ額を入力した場合も、利用者の減少を見込まない点は同じなので、同じ警告が必要なため）。
- * high が null（上限運賃の目安がない）のときは判定しない。
+ *
+ * 警告が出る条件（要件 F-4A-4 の文言どおり）：
+ * - 均一制：運賃が「高め」以上のとき。標準と高めの間の運賃（高めより低い運賃）では出さない。
+ * - 対キロ区間制：初乗り運賃も賃率も「高め」以上のときだけ。**片方だけ高い場合は出さない**。
+ * - high が null（上限運賃の目安がない）、制定形態が違う、運賃弾力性が0でないときは出さない。
  */
 export function highFareWithZeroElasticity(args: {
   fare: Pick<Fare, 'type' | 'flatFare' | 'baseFare' | 'ratePerKm'>

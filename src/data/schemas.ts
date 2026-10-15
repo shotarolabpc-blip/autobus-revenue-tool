@@ -170,6 +170,8 @@ export const fareReferenceSchema = z.object({
     quote: z.string().optional(),
   }),
   note: z.string().optional(),
+  /** 種別の分類の根拠（運行主体・委託・補助が書かれた公式ページと、その文言）。コミュニティバスで必須 */
+  categoryBasis: z.object({ text: z.string(), url: z.url() }).optional(),
 })
 
 export const fareReferencesFileSchema = z.object({

@@ -200,7 +200,7 @@ describe('「高め」を反映したときの運賃弾力性0の警告（F-4A-4
     expect(highFareWithZeroElasticity({ fare: flat(250), high, elasticity: -0.3 })).toBe(false)
   })
 
-  it('「高め」より低い運賃（標準など）や、目安がない場合は出ない', () => {
+  it('標準と高めの間の運賃（高めより低い運賃）や、目安がない場合は出ない（要件 F-4A-4 は「高め」以上のときだけ）', () => {
     expect(highFareWithZeroElasticity({ fare: flat(249), high, elasticity: 0 })).toBe(false)
     expect(
       highFareWithZeroElasticity({ fare: flat(0), high: { ...high, flatFare: 0 }, elasticity: 0 }),
@@ -208,7 +208,7 @@ describe('「高め」を反映したときの運賃弾力性0の警告（F-4A-4
     expect(highFareWithZeroElasticity({ fare: flat(300), high: null, elasticity: 0 })).toBe(false)
   })
 
-  it('対キロ区間制：初乗り運賃も賃率も「高め」以上のときだけ', () => {
+  it('対キロ区間制：初乗り運賃も賃率も「高め」以上のときだけ警告。片方だけ高い場合は出ない', () => {
     const h = {
       ...high,
       fareType: 'distance' as const,

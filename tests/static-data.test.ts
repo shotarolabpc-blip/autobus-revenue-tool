@@ -87,13 +87,44 @@ describe('運賃の参考データ（public/data/fare_references.json）', () =>
     for (const c of ['community', 'route', 'autonomous']) {
       expect(market.some((i) => i.category === c)).toBe(true)
     }
+    // 多摩地域（三鷹市）でも、コミュニティバスの参考データがある
+    const tama = file.items.filter(
+      (i) => i.kind === 'market' && (i.cityCodes === null || i.cityCodes.includes('13204')),
+    )
+    expect(tama.some((i) => i.category === 'community')).toBe(true)
   })
 
-  it('分類できなかった項目は載せず、その理由を notFound に書いている', () => {
-    const ids = file.items.map((i) => i.id)
+  it('コミュニティバスは、分類の根拠（自治体が運行主体・委託・補助していることを示す公式ページ）を持つ', () => {
+    const community = file.items.filter((i) => i.category === 'community')
+    expect(community.length).toBeGreaterThanOrEqual(7)
+    for (const i of community) {
+      expect(i.categoryBasis?.text.length).toBeGreaterThan(10)
+      expect(i.categoryBasis?.url.startsWith('https://')).toBe(true)
+    }
+    // 以前は「循環バス」「ムーバス」の呼び方を理由に除外していた3件も、運行主体を確認して分類している
+    const ids = community.map((i) => i.id)
     for (const id of ['taito-megurin', 'sumida-hyakkei', 'musashino-mubus'])
-      expect(ids).not.toContain(id)
-    expect(file.notFound.join()).toContain('種別を決められず')
+      expect(ids).toContain(id)
+  })
+
+  it('コミュニティバスの参考データの当てはめ範囲：区のバスは区部の全区、市のバスは市部の全市', () => {
+    const cityCodes = (id: string) => file.items.find((i) => i.id === id)?.cityCodes ?? []
+    for (const id of [
+      'kita-kbus',
+      'taito-megurin',
+      'sumida-hyakkei',
+      'bunkyo-bgru',
+      'minato-chiibus',
+      'shibuya-hachiko',
+    ]) {
+      expect(cityCodes(id)).toHaveLength(23)
+      expect(cityCodes(id)).toContain('13101')
+      expect(cityCodes(id)).toContain('13123')
+    }
+    const city = cityCodes('musashino-mubus')
+    expect(city).toContain('13203') // 武蔵野市
+    expect(city).toContain('13204') // 三鷹市：多摩地域でもコミュニティバスの値が出る
+    expect(city).not.toContain('13113') // 区部には当てはめない
   })
 
   it('相場と上限運賃の両方があり、同じ制定形態の上限は相場より低くない（東京都・均一制）', () => {

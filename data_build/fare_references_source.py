@@ -14,15 +14,27 @@ from common import PUBLIC_DATA, setup_console
 
 CHECKED_AT = "2026-10-14"
 PREF = "13"
-WARDS = [f"131{n:02d}" for n in range(1, 24)]  # 特別区（13101〜13123）
+WARDS = [f"131{n:02d}" for n in range(1, 24)]  # 区部（特別区 13101〜13123）
+# 市部（13201〜13229）。市区町村の一覧（国土数値情報の行政区域から作ったもの）に載っているコードだけを使う
+_MUNICIPALITIES = {m["code"] for m in json.loads((PUBLIC_DATA / "municipalities" / "13.json").read_text(encoding="utf-8"))["items"]}
+CITIES = [f"132{n:02d}" for n in range(1, 30) if f"132{n:02d}" in _MUNICIPALITIES]
 
 KANTO = "https://wwwtb.mlit.go.jp/kanto/content"
 
-# 種別（category）：route＝路線バス（事業者が一般乗合旅客自動車運送事業として運行する通常の路線）、
-# community＝コミュニティバス、autonomous＝自動運転バス。
-# 分類は出典資料の記載による。資料に「コミュニティバス」「自動運転バス」と書かれているものだけをそれぞれに分類し、
-# 事業者の乗合バスの運賃（国土交通省・関東運輸局の認可・届出資料、事業者・東京都交通局の運賃表）は route とする。
-# 資料の呼び方が「循環バス」「ムーバス」などで、コミュニティバスと書かれていないものは、推測で分類せず載せない（NOT_FOUND に記載）。
+# 種別（category）の分類基準（2026-10-15 決定）：
+#   route      ＝路線バス。事業者が一般乗合旅客自動車運送事業として運行する通常の路線
+#                （国土交通省・関東運輸局の認可・届出資料、事業者・東京都交通局の運賃表）
+#   community  ＝コミュニティバス。**自治体が運行主体、または委託・補助して運行しているバス**
+#                （自治体の公式資料で確認できるもの。呼び方は「循環バス」「ムーバス」などでもよい）。
+#                根拠（運行主体・委託・補助が書かれた公式ページと、その文言）を categoryBasis に残す
+#   autonomous ＝自動運転バス。資料に「自動運転バス」と書かれているもの
+# 運行主体を公式資料で確認できなかったものは、推測で分類せず載せない（NOT_FOUND に記載）。
+#
+# コミュニティバスの参考データを当てはめる地域の単位（2026-10-15 決定）：
+#   区が運行するバスは「区部（23区）の全区」、市が運行するバスは「市部（東京都の26市）の全市」で参考にする。
+#   運行環境（人口密度・路線バスの密度）が近い単位で、市区町村ごとに分けると、データのない市区町村が増えるため。
+#   町村・島しょのコミュニティバスの参考データは、まだ載せていない。
+#   自動運転バスは事例が少ないため、都内全域で参考にする。
 CATEGORIES = ("route", "community", "autonomous")
 
 
@@ -33,8 +45,14 @@ def src(title: str, url: str, quote: str | None = None) -> dict:
     return d
 
 
+def basis(text: str, url: str) -> dict:
+    """分類の根拠：運行主体・委託・補助が書かれた公式ページ（URL）と、その文言"""
+    return {"text": text, "url": url}
+
+
 def item(
-    id_, kind, category, operator, fare_type, source, city_codes=None, flat=None, base=None, rate=None, note=None
+    id_, kind, category, operator, fare_type, source, city_codes=None, flat=None, base=None, rate=None, note=None,
+    category_basis=None,
 ):
     d = {
         "id": id_,
@@ -51,6 +69,8 @@ def item(
     }
     if note:
         d["note"] = note
+    if category_basis:
+        d["categoryBasis"] = category_basis
     return d
 
 
@@ -149,7 +169,8 @@ ITEMS = [
         flat=230,
         note="掲載ページに更新日の記載なし。小児は現金120円・IC115円",
     ),
-    # コミュニティバス（大人。市区町村コードは国土数値情報の行政区域の一覧と一致を確認）
+    # コミュニティバス（大人）。区のバスは区部の全区、市のバスは市部の全市で参考にする。
+    # 市区町村コードは国土数値情報の行政区域の一覧と一致を確認
     item(
         "kita-kbus",
         "market",
@@ -164,6 +185,46 @@ ITEMS = [
         WARDS,
         flat=100,
         note="北区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする",
+        category_basis=basis(
+            "北区の公式ページの見出し「北区コミュニティバス「Kバス」のご案内」",
+            "https://www.city.kita.lg.jp/living/transport/1002525/1002526.html",
+        ),
+    ),
+    item(
+        "taito-megurin",
+        "market",
+        "community",
+        "台東区 めぐりん",
+        "flat",
+        src(
+            "台東区 めぐりん 運賃",
+            "https://www.city.taito.lg.jp/kenchiku/kotsu/megurin/gaiyou/ryoukin/index.html",
+        ),
+        WARDS,
+        flat=100,
+        note="台東区の運賃（大人・小児とも100円）。区部のコミュニティバスの相場として、区部の全区で参考にする。運賃のページに更新日の記載なし。分類の根拠は間接的（根拠の欄を参照）",
+        category_basis=basis(
+            "台東区地域公共交通会議のページに「台東区では、地域のニーズに応じたコミュニティバスを運行するために」とあり、同じページで台東区循環バス「めぐりん」が議題の対象。めぐりんをコミュニティバスと明記した文はなく、この読み取りは間接的",
+            "https://www.city.taito.lg.jp/kenchiku/kotsu/megurin/koukyoukoutsukaigi.html",
+        ),
+    ),
+    item(
+        "sumida-hyakkei",
+        "market",
+        "community",
+        "墨田区 すみだ百景",
+        "flat",
+        src(
+            "墨田区 すみだ百景 運賃",
+            "https://www.city.sumida.lg.jp/kurashi/jyunkanbus/gaiyou/unchin.html",
+        ),
+        WARDS,
+        flat=100,
+        note="墨田区の運賃（大人〈中学生以上〉100円・小学生50円）。区部のコミュニティバスの相場として、区部の全区で参考にする。基本運賃を200円に改定予定（令和9年度以降）",
+        category_basis=basis(
+            "墨田区の公式ページに「区が事業費を補助しているコミュニティバス」「区は収支不足額を補助しています」とあり、運行事業者は京成バス",
+            "https://www.city.sumida.lg.jp/matizukuri/koutu/busminaosi/bus_minaoshi.html",
+        ),
     ),
     item(
         "bunkyo-bgru",
@@ -179,6 +240,10 @@ ITEMS = [
         WARDS,
         flat=100,
         note="文京区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする",
+        category_basis=basis(
+            "文京区の公式ページの見出し「文京区コミュニティバス「Bーぐる」のご案内」",
+            "https://www.city.bunkyo.lg.jp/b011/p001060.html",
+        ),
     ),
     item(
         "minato-chiibus",
@@ -193,7 +258,11 @@ ITEMS = [
         ),
         WARDS,
         flat=100,
-        note="港区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする。小学生以上100円",
+        note="港区の運賃（小学生以上100円）。区部のコミュニティバスの相場として、区部の全区で参考にする",
+        category_basis=basis(
+            "港区の公式ページに「港区コミュニティバス「ちぃばす」」とあり、運行事業者は株式会社フジエクスプレス",
+            "https://www.city.minato.tokyo.jp/koutsuutaisaku/kankyo-machi/kotsu/bus/unchin.html",
+        ),
     ),
     item(
         "shibuya-hachiko",
@@ -209,6 +278,29 @@ ITEMS = [
         WARDS,
         flat=100,
         note="渋谷区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする",
+        category_basis=basis(
+            "渋谷区の公式ページでハチ公バスをコミュニティバスとして紹介。区が運行（東急バス・京王バスが路線を担当）",
+            "https://www.city.shibuya.tokyo.jp/kurashi/kotsu/hachiko/hachiko_about.html",
+        ),
+    ),
+    item(
+        "musashino-mubus",
+        "market",
+        "community",
+        "武蔵野市 ムーバス",
+        "flat",
+        src(
+            "武蔵野市 ムーバス 運賃",
+            "https://www.city.musashino.lg.jp/kurashi_tetsuzuki/bus_churin_chusha_kotsuanzen/mubus/1005137.html",
+            "100円(未就学児は無料)",
+        ),
+        CITIES,
+        flat=100,
+        note="武蔵野市の運賃。市部のコミュニティバスの相場として、市部の全市で参考にする",
+        category_basis=basis(
+            "武蔵野市の公式ページに「ムーバスの運転士に対して住宅手当を月1万5,000円補助します。」とあり、市がムーバスの運行を補助している。運行事業者の名前、「コミュニティバス」という呼び方は、このページにはない",
+            "https://www.city.musashino.lg.jp/kurashi_tetsuzuki/bus_churin_chusha_kotsuanzen/mubus/1054082.html",
+        ),
     ),
     # 自動運転バス
     item(
@@ -345,8 +437,6 @@ ITEMS = [
 ]
 
 NOT_FOUND = [
-    "台東区「めぐりん」・墨田区「すみだ百景」（各100円）：出典ページの呼び方が「循環バス」で、コミュニティバスとは書かれていないため、種別を決められず、載せていません",
-    "武蔵野市「ムーバス」（100円）：出典ページにコミュニティバスとの記載がなく、種別を決められないため、載せていません",
     "東急バスの都内の運賃（2025年10月の改定後）",
     "三鷹市・調布市・日野市などのコミュニティバスの運賃（調べていません）",
     "羽田イノベーションシティの自動運転バスの運賃（公式資料に記載なし。運行は休止中）",

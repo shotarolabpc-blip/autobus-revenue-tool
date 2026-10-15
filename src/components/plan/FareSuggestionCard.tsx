@@ -54,6 +54,15 @@ function ReferenceList({ refs, todayIso }: { refs: FareReference[]; todayIso: st
               </span>
             )}
             {r.note && <small className="hint"> {r.note}</small>}
+            {r.categoryBasis && (
+              <small className="hint">
+                {' '}
+                種別の根拠：
+                <a href={r.categoryBasis.url} target="_blank" rel="noopener noreferrer">
+                  {r.categoryBasis.text}
+                </a>
+              </small>
+            )}
           </li>
         ))}
       </ul>
