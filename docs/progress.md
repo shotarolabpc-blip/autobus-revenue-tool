@@ -21,3 +21,10 @@
 | P1-8 | 受入確認 | `docs/requirements.md` の「10. 受入基準」 |
 | Q3 の実装 | 15-64歳の係数の作り方 | 精度確認の結果が1%程度に収まらなかったため保留（`docs/age_weights_accuracy.md`、`docs/open_questions.md` の Q3） |
 | ほか | `docs/open_questions.md` のご判断（Q2・Q4〜Q13）を待って実装 | 決定欄に回答が入ってから |
+
+## Q3＝B の実装（2026-10-15）
+
+- 人口データを調査の7区分（0-4／5-14／15-29／30-49／50-64／65-74／75+）に変更（`data_build/population.py`、東京都を再生成。容量 1.76MB → 2.3MB）。
+- 需要推計（`src/calc/demand.ts`）は区分数に依存しない形にし、年齢区分は入力で渡す。`src/calc/ageClasses.ts` に7区分・4階層の変換（表示用の合算、開発計画の年齢構成の展開）。
+- 係数（`coefficients.json`）も7区分。0〜4歳は Q2 未決定のため暫定で5〜14歳の値（`provisional: true`。`coefficient_rules.yaml` の `from` だけで変えられる）。
+- `src/data/schemas.ts` に係数の検証、`src/data/coefficients.ts` に変換、テストを追加。

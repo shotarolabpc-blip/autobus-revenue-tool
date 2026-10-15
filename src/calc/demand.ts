@@ -2,32 +2,32 @@
  * 需要推計（要件 F-5、5.1・5.2・5.3・5.5）。純粋関数のみ。
  *
  *   年間延べ乗車人員(t) =
- *     Σ_バス停 Σ_年齢階層a [ 勢圏人口(a,t) × 外出率(a) × 1日トリップ数(a) × バス分担率(a) × 路線捕捉率 ]
+ *     Σ_バス停 Σ_年齢区分a [ 勢圏人口(a,t) × 外出率(a) × 1日トリップ数(a) × バス分担率(a) × 路線捕捉率 ]
+ *   年齢区分は全国都市交通特性調査の7区分（calc/ageClasses.ts）。区分ごとの係数をそのまま掛けて足し合わせる（Q3：B）。
  *     × 運行サービス補正係数 × 運賃補正係数 × 立ち上がり係数(t) × 年間運行日数換算
  *     ＋ 施設・観光等の外部需要
  *
  * 平日と土休日で係数と運行日数が違うので、日種別ごとに1日あたりを出し、運行日数を掛けて合計する。
  * 各項を内訳として返し、画面で「なぜこの人数か」を確認できるようにする。
  */
-import { AGE_CLASSES, type AgeClass } from '../project/schema'
-
 export type DayType = 'weekday' | 'holiday'
 export const DAY_TYPES: DayType[] = ['weekday', 'holiday']
 
 export type AgeCoefficients = { outingRate: number; tripRate: number; busShare: number }
-export type Coefficients = Record<DayType, Record<AgeClass, AgeCoefficients>>
+/** 日種別 × 年齢区分 → 係数。年齢区分の名前は DemandInput.ageClasses と同じにする */
+export type Coefficients = Record<DayType, Record<string, AgeCoefficients>>
 
-/** 4階層の人口 [0-14, 15-64, 65-74, 75+] */
-export type AgePop = [number, number, number, number]
+/** 年齢区分ごとの人口（順番は DemandInput.ageClasses） */
+export type AgePop = number[]
 
 /** 5年刻みの人口を年次で線形補間する（5.2）。範囲外は端の値 */
 export function interpolatePop(years: number[], pops: AgePop[], year: number): AgePop {
-  if (year <= years[0]) return [...pops[0]] as AgePop
+  if (year <= years[0]) return [...pops[0]]
   const last = years.length - 1
-  if (year >= years[last]) return [...pops[last]] as AgePop
+  if (year >= years[last]) return [...pops[last]]
   const i = years.findIndex((y, k) => year >= y && year < years[k + 1])
   const t = (year - years[i]) / (years[i + 1] - years[i])
-  return pops[i].map((v, k) => v + (pops[i + 1][k] - v) * t) as AgePop
+  return pops[i].map((v, k) => v + (pops[i + 1][k] - v) * t)
 }
 
 /** 運賃補正係数：運賃が基準より1%上がると、利用者が 弾力性 % 減る（線形。0未満にはしない） */
@@ -49,7 +49,7 @@ export function developmentPeople(
 
 export type StopPopulation = {
   stopId: string
-  /** 勢圏人口（4階層）。開発計画・エリア補正を含む */
+  /** 勢圏人口（年齢区分ごと）。開発計画・エリア補正を含む */
   pop: AgePop
   /** うち開発計画による増加 */
   development: AgePop
@@ -57,7 +57,8 @@ export type StopPopulation = {
 
 export type DemandTerm = {
   stopId: string
-  age: AgeClass
+  /** 年齢区分（DemandInput.ageClasses の名前） */
+  age: string
   dayType: DayType
   population: number
   outingRate: number
@@ -97,6 +98,8 @@ export type YearDemand = {
 
 export type DemandInput = {
   fiscalYears: number[]
+  /** 年齢区分の並び（人口・開発計画の年齢構成・係数の名前と同じ順）。通常は AGE_CLASSES_7 */
+  ageClasses: readonly string[]
   stopIds: string[]
   /** バス停ごとの「集計単位 → 配分割合」（catchmentWeights の結果） */
   weights: Map<string, Map<string, number>>
@@ -116,8 +119,8 @@ export type DemandInput = {
     people: number
     startFiscalYear: number
     phaseYears: number
-    /** 年齢構成（null なら勢圏の年齢構成に合わせる） */
-    ageMix: AgePop | null
+    /** 年齢構成（年齢区分ごとの割合。合計1）。null なら勢圏の年齢構成に合わせる。4階層の入力は expandAgeMix で広げる */
+    ageMix: number[] | null
   }[]
   facilities: {
     dailyRiders: number
@@ -131,19 +134,20 @@ export type DemandInput = {
 
 export function computeDemand(input: DemandInput): YearDemand[] {
   const { population } = input
+  const n = input.ageClasses.length
   const start = input.fiscalYears[0]
   return input.fiscalYears.map((fy, yearIndex) => {
     const adjust = (1 + input.areaAdjustPctPerYear / 100) ** (fy - start)
     // バス停ごとの勢圏人口
     const stops: StopPopulation[] = input.stopIds.map((stopId) => {
-      const pop: AgePop = [0, 0, 0, 0]
+      const pop: AgePop = new Array<number>(n).fill(0)
       for (const [unitId, w] of input.weights.get(stopId) ?? []) {
         const series = population.units.get(unitId)
         if (!series) continue
         const p = interpolatePop(population.years, series, fy)
-        for (let k = 0; k < 4; k++) pop[k] += p[k] * w * adjust
+        for (let k = 0; k < n; k++) pop[k] += p[k] * w * adjust
       }
-      return { stopId, pop, development: [0, 0, 0, 0] }
+      return { stopId, pop, development: new Array<number>(n).fill(0) }
     })
     // 開発計画（F-5-1・F-5-2）
     for (const d of input.developments) {
@@ -153,7 +157,7 @@ export function computeDemand(input: DemandInput): YearDemand[] {
         const share = d.stopShares.get(st.stopId) ?? 0
         if (share <= 0) continue
         const mix = d.ageMix ?? normalize(st.pop)
-        for (let k = 0; k < 4; k++) {
+        for (let k = 0; k < n; k++) {
           const add = people * share * mix[k]
           st.pop[k] += add
           st.development[k] += add
@@ -164,7 +168,7 @@ export function computeDemand(input: DemandInput): YearDemand[] {
     const terms: DemandTerm[] = []
     const dailyBase: Record<DayType, number> = { weekday: 0, holiday: 0 }
     for (const st of stops) {
-      AGE_CLASSES.forEach((age, k) => {
+      input.ageClasses.forEach((age, k) => {
         for (const dayType of DAY_TYPES) {
           const c = input.coefficients[dayType][age]
           const v = st.pop[k] * c.outingRate * c.tripRate * c.busShare * input.captureRate
@@ -238,7 +242,7 @@ export function computeDemand(input: DemandInput): YearDemand[] {
   })
 }
 
-function normalize(p: AgePop): AgePop {
-  const t = p[0] + p[1] + p[2] + p[3]
-  return t > 0 ? (p.map((v) => v / t) as AgePop) : [0.25, 0.25, 0.25, 0.25]
+function normalize(p: AgePop): number[] {
+  const t = p.reduce((a, b) => a + b, 0)
+  return t > 0 ? p.map((v) => v / t) : p.map(() => 1 / p.length)
 }

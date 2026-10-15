@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AGE_CLASSES_7, type AgeClass7 } from '../calc/ageClasses'
 
 /** 出典の1件。画面と出力物（CSV・Excel・PNG）の両方で使う。 */
 export const attributionSchema = z.object({
@@ -90,14 +91,24 @@ export const municipalitiesFileSchema = z.object({
 })
 export type Municipality = z.infer<typeof municipalitiesFileSchema>['items'][number]
 
+/**
+ * 人口の年齢区分（全国都市交通特性調査の年齢区分に合わせた7区分。Q3：B、2026-10-15 決定）。
+ * 0〜4歳は調査の対象外だが、人口データには別に持つ（係数の扱いはQ2で決める）。
+ */
+export const POPULATION_AGE_CLASSES = AGE_CLASSES_7
+export type PopulationAgeClass = AgeClass7
+
 /** 人口メッシュ（都道府県ごとの目次）。data_build/population.py が生成 */
 export const populationIndexSchema = z.object({
   prefCode: z.string(),
   version: z.string(),
   years: z.array(z.number().int()).min(1),
   ageClasses: z.tuple([
-    z.literal('0-14'),
-    z.literal('15-64'),
+    z.literal('0-4'),
+    z.literal('5-14'),
+    z.literal('15-29'),
+    z.literal('30-49'),
+    z.literal('50-64'),
     z.literal('65-74'),
     z.literal('75+'),
   ]),
@@ -105,11 +116,11 @@ export const populationIndexSchema = z.object({
 })
 export type PopulationIndex = z.infer<typeof populationIndexSchema>
 
-/** 人口の集計単位（秘匿・合算メッシュをまとめたもの）。pop は [年次][年齢階層] */
+/** 人口の集計単位（秘匿・合算メッシュをまとめたもの）。pop は [年次][年齢区分（7区分）] */
 export const populationUnitSchema = z.object({
   id: z.string(),
   meshes: z.array(z.string()).min(1),
-  pop: z.array(z.array(z.number()).length(4)),
+  pop: z.array(z.array(z.number()).length(POPULATION_AGE_CLASSES.length)),
 })
 export type PopulationUnit = z.infer<typeof populationUnitSchema>
 
@@ -183,3 +194,38 @@ export const fareReferencesFileSchema = z.object({
   items: z.array(fareReferenceSchema),
 })
 export type FareReferencesFile = z.infer<typeof fareReferencesFileSchema>
+
+/** 需要推計の係数（public/data/coefficients.json）。data_build/build_coefficients.py が生成。年齢は人口と同じ7区分 */
+const ageCoefficientSchema = z.object({
+  outingRate: z.number().min(0).max(1),
+  tripRate: z.number().min(0),
+  busShare: z.number().min(0).max(1),
+})
+const dayCoefficientsSchema = z.object(
+  Object.fromEntries(AGE_CLASSES_7.map((a) => [a, ageCoefficientSchema])) as Record<
+    AgeClass7,
+    typeof ageCoefficientSchema
+  >,
+)
+export const coefficientsFileSchema = z.object({
+  survey: z.object({
+    name: z.string(),
+    year: z.number().int(),
+    provider: z.string(),
+    pageUrl: z.url(),
+  }),
+  tables: z.record(z.string(), z.string()),
+  tableFiles: z.array(z.object({ title: z.string(), url: z.url() })),
+  ageMapping: z.record(
+    z.string(),
+    z.object({ from: z.array(z.string()), provisional: z.boolean() }),
+  ),
+  ageMappingStatus: z.string(),
+  cityTypes: z.array(z.object({ code: z.number().int(), name: z.string() })),
+  /** 都市類型コード → 平日／休日 → 年齢区分 → 係数 */
+  values: z.record(
+    z.string(),
+    z.object({ weekday: dayCoefficientsSchema, holiday: dayCoefficientsSchema }),
+  ),
+})
+export type CoefficientsFile = z.infer<typeof coefficientsFileSchema>

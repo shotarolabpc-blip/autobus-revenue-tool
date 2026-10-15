@@ -1,6 +1,10 @@
 """人口メッシュ（500mメッシュ別将来推計人口 R6国政局推計）の加工。要件 5.2。
 
-- 男女計・5歳階級（PT01〜PT20）を「0-14／15-64／65-74／75+」の4階層に集約する。
+- 男女計・5歳階級（PT01〜PT20）を、全国都市交通特性調査の年齢区分に合わせた7区分
+  「0-4／5-14／15-29／30-49／50-64／65-74／75+」に集約する（Q3：B、2026-10-15 決定）。
+  調査の区分（5〜14・15〜29・30〜49・50〜64・65〜74・75歳以上）をそのまま使うので、区分ごとの係数を平均する必要がなく、
+  0〜4歳（調査の対象外）の扱い（Q2）も、人口データを作り直さずに、係数の側で決められる。
+  要件定義書の4階層（0-14／15-64／65-74／75+）は、画面の表示用にこの7区分から合算する。
 - 秘匿メッシュ（HITOKU="*"）の人口は合算先メッシュ（"@"、GASSAN に記載）に含まれている。
   秘匿・合算先メッシュは、どの年次でも合算関係にあるメッシュをまとめて1つの「集計単位」にする。
   集計単位の人口＝構成メッシュの人口の合計（秘匿メッシュは0なので二重計上にならない）。
@@ -23,13 +27,18 @@ from common import dir_size, write_json
 
 YEARS = list(range(2025, 2071, 5))
 
-# 5歳階級コード（PT01=0〜4歳 … PT20=95歳以上）→ 要件の4階層
+# 5歳階級コード（PT01=0〜4歳 … PT20=95歳以上）→ 7区分（調査の年齢区分に合わせる）
 AGE_GROUPS: dict[str, list[int]] = {
-    "0-14": [1, 2, 3],
-    "15-64": list(range(4, 14)),
+    "0-4": [1],
+    "5-14": [2, 3],
+    "15-29": [4, 5, 6],
+    "30-49": [7, 8, 9, 10],
+    "50-64": [11, 12, 13],
     "65-74": [14, 15],
     "75+": list(range(16, 21)),
 }
+# 人口は小数第1桁まで持つ（容量を小さくするため。1メッシュの1区分あたり最大0.05人の丸め）
+POP_DIGITS = 1
 
 HIDDEN = "*"  # 秘匿メッシュ
 MERGED_INTO = "@"  # 合算先メッシュ
@@ -71,7 +80,7 @@ def group_meshes(records: list[dict]) -> dict[str, list[str]]:
 
 
 def age_population(r: dict, year: int) -> list[float]:
-    """1メッシュ・1年次の4階層別人口"""
+    """1メッシュ・1年次の7区分別人口"""
     out = []
     for codes in AGE_GROUPS.values():
         out.append(sum(float(r.get(f"PT{c:02d}_{year}") or 0) for c in codes))
@@ -79,7 +88,7 @@ def age_population(r: dict, year: int) -> list[float]:
 
 
 def build_units(records: list[dict]) -> tuple[list[dict], list[str]]:
-    """集計単位（id・構成メッシュ・年次×4階層の人口）を作る。警告の一覧も返す"""
+    """集計単位（id・構成メッシュ・年次×7区分の人口）を作る。警告の一覧も返す"""
     by_id = {r["MESH_ID"]: r for r in records}
     warnings: list[str] = []
     units = []
@@ -89,13 +98,13 @@ def build_units(records: list[dict]) -> tuple[list[dict], list[str]]:
             warnings.append(f"合算先メッシュがこの県のデータにありません: {missing}")
         pop = []
         for y in YEARS:
-            total = [0.0, 0.0, 0.0, 0.0]
+            total = [0.0] * len(AGE_GROUPS)
             for m in members:
                 if m in by_id:
                     total = [a + b for a, b in zip(total, age_population(by_id[m], y))]
-            pop.append([round(v, 2) for v in total])
+            pop.append([round(v, POP_DIGITS) for v in total])
         units.append({"id": rep, "meshes": members, "pop": pop})
-    # 検算：4階層の合計が総数（PT00）と一致するか
+    # 検算：7区分の合計が総数（PT00）と一致するか
     for r in records:
         for y in YEARS:
             pt00 = float(r.get(f"PT00_{y}") or 0)

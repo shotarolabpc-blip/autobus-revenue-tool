@@ -7,7 +7,7 @@
   - 5_目的・手段集計（001732069.xlsx）表8-2「性別・年齢階層別・代表交通手段別原単位、構成比」
       性別＝合計 の 構成比（ネット）の バス
 いずれも 都市類型（10分類＋全国計）× 平日／休日 × 年齢階層。
-年齢階層の合わせ方は coefficient_rules.yaml（暫定案）。
+年齢階層は調査の6区分をそのまま使う（Q3：B）。0〜4歳の扱いだけ暫定（Q2未決定）。coefficient_rules.yaml を参照。
 
 令和7年度調査の公表後は、SURVEY の版とファイル名を差し替えて実行し直す。
 
@@ -145,9 +145,10 @@ def main() -> None:
                 {"title": MODE["title"], "url": MODE["url"]},
             ],
             "ageMapping": {
-                age: {"from": m["from"], "method": m.get("method", "same")} for age, m in rules["age_mapping"].items()
+                age: {"from": m["from"], "provisional": bool(m.get("provisional", False))}
+                for age, m in rules["age_mapping"].items()
             },
-            "ageMappingStatus": "TODO(根拠未確定)：年齢階層の合わせ方は暫定案（data_build/coefficient_rules.yaml）",
+            "ageMappingStatus": "年齢階層は調査の区分をそのまま使う（Q3：B、2026-10-15 決定）。TODO(根拠未確定)：0〜4歳（provisional）はQ2未決定のため、暫定で5〜14歳の値を使う",
             "cityTypes": [{"code": c, "name": n} for c, n in sorted(names.items())],
             "values": values,
         },

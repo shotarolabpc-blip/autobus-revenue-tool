@@ -55,6 +55,8 @@ function sampleInput(over: Partial<DemandInput> = {}): DemandInput {
   const weights = catchmentWeights(sample.stops, units, 5)
   return {
     fiscalYears: sample.fiscalYears,
+    // この手計算サンプルは4区分（係数も人口も4区分）で作ってある。7区分の確認は demand.age7.test.ts
+    ageClasses: ['0-14', '15-64', '65-74', '75+'],
     stopIds: sample.stops.map((s) => s.id),
     weights,
     population: {

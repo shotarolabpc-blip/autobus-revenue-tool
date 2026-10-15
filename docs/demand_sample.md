@@ -1,5 +1,7 @@
 # 需要推計の手計算サンプル（P1-5）
 
+> **年齢区分について（Q3：B、2026-10-15 決定）**：実際の計算は人口・係数とも調査の7区分で行う（テスト：`src/calc/demand.age7.test.ts`）。この手計算サンプルは読みやすさのため4区分（0-14／15-64／65-74／75+）で作ってあり、`src/calc/demand.test.ts` で検証している。区分の数を変えても、計算の式（人口×外出率×トリップ数×バス分担率の合計）は同じ。
+
 需要推計の計算（`src/calc/demand.ts`・`src/gis/catchment.ts`）が正しいことを確かめるための、手で計算できる小さな例です。
 データは `tests/fixtures/demand_sample.json`、テストは `src/calc/demand.test.ts` です。
 

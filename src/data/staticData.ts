@@ -1,6 +1,8 @@
 import type { z } from 'zod'
 import {
   attributionsFileSchema,
+  coefficientsFileSchema,
+  type CoefficientsFile,
   basemapsFileSchema,
   defaultsFileSchema,
   fareReferencesFileSchema,
@@ -64,3 +66,6 @@ export const loadVehiclePresets = (): Promise<VehiclePresetsFile> =>
 
 export const loadFareReferences = (): Promise<FareReferencesFile> =>
   cached('fare_references.json', fareReferencesFileSchema)
+
+export const loadCoefficients = (): Promise<CoefficientsFile> =>
+  cached('coefficients.json', coefficientsFileSchema)

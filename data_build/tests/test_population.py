@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from population import YEARS, age_population, build_units, group_meshes, split_tiles  # noqa: E402
+from population import AGE_GROUPS, YEARS, age_population, build_units, group_meshes, split_tiles  # noqa: E402
 
 
 def mesh(mid: str, per_class: float = 0.0, hidden: dict | None = None) -> dict:
@@ -21,10 +21,29 @@ def mesh(mid: str, per_class: float = 0.0, hidden: dict | None = None) -> dict:
     return r
 
 
+def test_age_groups_are_the_seven_survey_classes():
+    # 全国都市交通特性調査の年齢区分に合わせた7区分（0〜4歳は調査の対象外だが、人口データは別に持つ）
+    assert list(AGE_GROUPS) == ["0-4", "5-14", "15-29", "30-49", "50-64", "65-74", "75+"]
+    # すべての5歳階級（PT01〜PT20）が、ちょうど1つの区分に入る
+    codes = sorted(c for cs in AGE_GROUPS.values() for c in cs)
+    assert codes == list(range(1, 21))
+
+
 def test_age_groups_sum_5yr_classes():
     r = mesh("533945111", 1.0)
-    # 0-14＝3階級、15-64＝10階級、65-74＝2階級、75+＝5階級
-    assert age_population(r, 2025) == [3.0, 10.0, 2.0, 5.0]
+    # 0-4＝1階級、5-14＝2階級、15-29＝3階級、30-49＝4階級、50-64＝3階級、65-74＝2階級、75+＝5階級
+    assert age_population(r, 2025) == [1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 5.0]
+
+
+def test_age_groups_pick_the_right_5yr_bands():
+    # PT01〜PT20 に 1, 2, 3, … 20人ずつ入れる（手で足せる）
+    r = mesh("533945111", 0.0)
+    for c in range(1, 21):
+        r[f"PT{c:02d}_2025"] = float(c)
+    # 0-4：PT01＝1 ／ 5-14：PT02+PT03＝5 ／ 15-29：PT04+PT05+PT06＝15 ／ 30-49：PT07〜PT10＝34
+    # 50-64：PT11+PT12+PT13＝36 ／ 65-74：PT14+PT15＝29 ／ 75+：PT16〜PT20＝90
+    assert age_population(r, 2025) == [1.0, 5.0, 15.0, 34.0, 36.0, 29.0, 90.0]
+    assert sum(age_population(r, 2025)) == sum(range(1, 21))
 
 
 def test_hidden_meshes_are_grouped_with_merge_target_across_years():
@@ -48,7 +67,7 @@ def test_unit_population_is_sum_of_members_without_double_counting():
     assert len(units) == 1
     u = units[0]
     assert u["meshes"] == ["533945111", "533945112"]
-    assert u["pop"][0] == [6.0, 20.0, 4.0, 10.0]
+    assert u["pop"][0] == [2.0, 4.0, 6.0, 8.0, 6.0, 4.0, 10.0]
 
 
 def test_mismatch_with_total_is_reported():
