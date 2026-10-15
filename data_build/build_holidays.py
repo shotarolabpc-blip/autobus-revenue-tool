@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 from datetime import date, timedelta
@@ -83,7 +84,13 @@ def read_published(path: Path) -> dict[date, str]:
 
 def main() -> None:
     setup_console()
-    src = download(CSV_URL, DATA_RAW / "cao" / "syukujitsu.csv")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--refresh", action="store_true", help="内閣府の CSV を取り直す（公表された年の「推定」を外すため）")
+    args = parser.parse_args()
+    csv_path = DATA_RAW / "cao" / "syukujitsu.csv"
+    if args.refresh and csv_path.exists():
+        csv_path.unlink()
+    src = download(CSV_URL, csv_path)
     published = read_published(src)
     last_published_year = max(d.year for d in published)
     items = []

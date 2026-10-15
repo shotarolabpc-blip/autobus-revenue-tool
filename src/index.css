@@ -839,3 +839,40 @@ body {
   padding-left: 1.2em;
   font-size: 0.8rem;
 }
+
+/* 運賃の目安：強調・参考・不足 */
+.suggestion.is-emphasized {
+  border: 2px solid #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+}
+
+.suggestion-missing {
+  color: var(--color-muted);
+  background: #f9fafb;
+  border-style: dashed;
+}
+
+.suggestion.is-reference {
+  border-style: dashed;
+}
+
+.badge-strong {
+  margin-left: 8px;
+  color: #fff;
+  background: #1f6feb;
+}
+
+/* 結果の画面の注意書き */
+.notice-box {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  color: #93370d;
+  background: #fffaeb;
+  border: 1px solid #fedf89;
+  border-radius: 8px;
+}
+
+.notice-box ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+}

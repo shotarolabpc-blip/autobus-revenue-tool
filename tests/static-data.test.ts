@@ -71,6 +71,31 @@ describe('運賃の参考データ（public/data/fare_references.json）', () =>
       for (const c of i.cityCodes ?? []) expect(municipalities.has(c)).toBe(true)
   })
 
+  it('すべての項目に種別（category）があり、route・community・autonomous のどれか', () => {
+    const allowed = ['route', 'community', 'autonomous']
+    for (const i of file.items) expect(allowed).toContain(i.category)
+    // 上限運賃（事業者が認可を受けた額）は、路線バスの事業者のもの
+    for (const i of file.items.filter((x) => x.kind === 'upperLimit'))
+      expect(i.category).toBe('route')
+  })
+
+  it('種別ごとの相場が載っている（コミュニティバス・路線バス・自動運転バス）。東京都の区部で3種別そろう', () => {
+    const ward = '13113'
+    const market = file.items.filter(
+      (i) => i.kind === 'market' && (i.cityCodes === null || i.cityCodes.includes(ward)),
+    )
+    for (const c of ['community', 'route', 'autonomous']) {
+      expect(market.some((i) => i.category === c)).toBe(true)
+    }
+  })
+
+  it('分類できなかった項目は載せず、その理由を notFound に書いている', () => {
+    const ids = file.items.map((i) => i.id)
+    for (const id of ['taito-megurin', 'sumida-hyakkei', 'musashino-mubus'])
+      expect(ids).not.toContain(id)
+    expect(file.notFound.join()).toContain('種別を決められず')
+  })
+
   it('相場と上限運賃の両方があり、同じ制定形態の上限は相場より低くない（東京都・均一制）', () => {
     const flat = (k: string) => file.items.filter((i) => i.kind === k && i.fareType === 'flat')
     expect(flat('market').length).toBeGreaterThan(0)

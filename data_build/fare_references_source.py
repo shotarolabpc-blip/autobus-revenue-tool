@@ -18,6 +18,13 @@ WARDS = [f"131{n:02d}" for n in range(1, 24)]  # 特別区（13101〜13123）
 
 KANTO = "https://wwwtb.mlit.go.jp/kanto/content"
 
+# 種別（category）：route＝路線バス（事業者が一般乗合旅客自動車運送事業として運行する通常の路線）、
+# community＝コミュニティバス、autonomous＝自動運転バス。
+# 分類は出典資料の記載による。資料に「コミュニティバス」「自動運転バス」と書かれているものだけをそれぞれに分類し、
+# 事業者の乗合バスの運賃（国土交通省・関東運輸局の認可・届出資料、事業者・東京都交通局の運賃表）は route とする。
+# 資料の呼び方が「循環バス」「ムーバス」などで、コミュニティバスと書かれていないものは、推測で分類せず載せない（NOT_FOUND に記載）。
+CATEGORIES = ("route", "community", "autonomous")
+
 
 def src(title: str, url: str, quote: str | None = None) -> dict:
     d = {"title": title, "url": url, "checkedAt": CHECKED_AT}
@@ -26,10 +33,13 @@ def src(title: str, url: str, quote: str | None = None) -> dict:
     return d
 
 
-def item(id_, kind, operator, fare_type, source, city_codes=None, flat=None, base=None, rate=None, note=None):
+def item(
+    id_, kind, category, operator, fare_type, source, city_codes=None, flat=None, base=None, rate=None, note=None
+):
     d = {
         "id": id_,
         "kind": kind,
+        "category": category,
         "prefCode": PREF,
         "cityCodes": city_codes,
         "operator": operator,
@@ -49,6 +59,7 @@ ITEMS = [
     item(
         "toei-23ku",
         "market",
+        "route",
         "東京都交通局（都営バス）一般系統",
         "flat",
         src(
@@ -63,6 +74,7 @@ ITEMS = [
     item(
         "kokusai-kogyo",
         "market",
+        "route",
         "国際興業バス（東京都内）",
         "flat",
         src(
@@ -75,6 +87,7 @@ ITEMS = [
     item(
         "kanto-bus",
         "market",
+        "route",
         "関東バス（都内均一）",
         "flat",
         src("関東運輸局 関東バス 乗合バス運賃の認可・届出（2024-03-01）", f"{KANTO}/000316336.pdf"),
@@ -84,6 +97,7 @@ ITEMS = [
     item(
         "tokyu-bus",
         "market",
+        "route",
         "東急バス（都内・横浜均一）",
         "flat",
         src("関東運輸局 東急バス 乗合バス運賃の認可・届出（2024-03-24）", f"{KANTO}/000318588.pdf"),
@@ -93,6 +107,7 @@ ITEMS = [
     item(
         "seibu-bus",
         "market",
+        "route",
         "西武バス（都内均一）",
         "flat",
         src("関東運輸局 西武バス 乗合バス運賃の認可・届出（2025-06-01）", f"{KANTO}/000348521.pdf"),
@@ -102,6 +117,7 @@ ITEMS = [
     item(
         "odakyu-bus",
         "market",
+        "route",
         "小田急バス（都内・横浜均一）",
         "flat",
         src("関東運輸局 小田急バス 乗合バス運賃の認可・届出（2024-06-01）", f"{KANTO}/000324474.pdf"),
@@ -111,6 +127,7 @@ ITEMS = [
     item(
         "tobu-bus-central",
         "market",
+        "route",
         "東武バスセントラル（特別区均一）",
         "flat",
         src(
@@ -124,6 +141,7 @@ ITEMS = [
     item(
         "keio-bus-23ku",
         "market",
+        "route",
         "京王バス（都区内）",
         "flat",
         src("京王バス 運賃のご案内", "https://www.keio-bus.com/bus/fare/index.html"),
@@ -135,6 +153,7 @@ ITEMS = [
     item(
         "kita-kbus",
         "market",
+        "community",
         "北区 K-バス",
         "flat",
         src(
@@ -142,38 +161,14 @@ ITEMS = [
             "https://www.city.kita.lg.jp/living/transport/1002525/1002526.html",
             "料金100円（一律）",
         ),
-        ["13117"],
+        WARDS,
         flat=100,
-    ),
-    item(
-        "taito-megurin",
-        "market",
-        "台東区 めぐりん",
-        "flat",
-        src(
-            "台東区 めぐりん 運賃",
-            "https://www.city.taito.lg.jp/kenchiku/kotsu/megurin/gaiyou/ryoukin/index.html",
-        ),
-        ["13106"],
-        flat=100,
-        note="大人・小児とも100円。ページに更新日の記載なし",
-    ),
-    item(
-        "sumida-hyakkei",
-        "market",
-        "墨田区 すみだ百景",
-        "flat",
-        src(
-            "墨田区 すみだ百景 運賃",
-            "https://www.city.sumida.lg.jp/kurashi/jyunkanbus/gaiyou/unchin.html",
-        ),
-        ["13107"],
-        flat=100,
-        note="大人（中学生以上）100円・小学生50円。基本運賃を200円に改定予定（令和9年度以降）",
+        note="北区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする",
     ),
     item(
         "bunkyo-bgru",
         "market",
+        "community",
         "文京区 B-ぐる",
         "flat",
         src(
@@ -181,12 +176,14 @@ ITEMS = [
             "https://www.city.bunkyo.lg.jp/b011/p001060.html",
             "大人 こども 各100円",
         ),
-        ["13105"],
+        WARDS,
         flat=100,
+        note="文京区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする",
     ),
     item(
         "minato-chiibus",
         "market",
+        "community",
         "港区 ちぃばす",
         "flat",
         src(
@@ -194,13 +191,14 @@ ITEMS = [
             "https://www.city.minato.tokyo.jp/koutsuutaisaku/kankyo-machi/kotsu/bus/unchin.html",
             "路線を乗り継ぐ場合は、それぞれの路線で100円です。",
         ),
-        ["13103"],
+        WARDS,
         flat=100,
-        note="小学生以上100円",
+        note="港区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする。小学生以上100円",
     ),
     item(
         "shibuya-hachiko",
         "market",
+        "community",
         "渋谷区 ハチ公バス",
         "flat",
         src(
@@ -208,37 +206,27 @@ ITEMS = [
             "https://www.city.shibuya.tokyo.jp/kurashi/kotsu/hachiko/hachiko_about.html",
             "大人・子供同額1乗車“ワンコイン”の100円",
         ),
-        ["13113"],
+        WARDS,
         flat=100,
-    ),
-    item(
-        "musashino-mubus",
-        "market",
-        "武蔵野市 ムーバス",
-        "flat",
-        src(
-            "武蔵野市 ムーバス 運賃",
-            "https://www.city.musashino.lg.jp/kurashi_tetsuzuki/bus_churin_chusha_kotsuanzen/mubus/1005137.html",
-            "100円(未就学児は無料)",
-        ),
-        ["13203"],
-        flat=100,
+        note="渋谷区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする",
     ),
     # 自動運転バス
     item(
         "keio-nishishinjuku-autonomous",
         "market",
+        "autonomous",
         "京王バス 西新宿の自動運転バス（レベル2）",
         "flat",
         src("京王バス 自動運転バス", "https://www.keio-bus.com/jidounten/"),
-        ["13104"],
+        None,
         flat=190,
-        note="大人190円（IC）・小児95円（IC）。ページに更新日の記載なし",
+        note="新宿区（西新宿）の事例。東京都内の自動運転バスの運賃の例として、都内全域で参考にする。大人190円（IC）・小児95円（IC）。ページに更新日の記載なし",
     ),
     # ---------------- 上限運賃：運行事業者が国から認可を受けた額（税込）
     item(
         "limit-kokusai-kogyo",
         "upperLimit",
+        "route",
         "国際興業バス（東京都内・均一）",
         "flat",
         src(
@@ -251,6 +239,7 @@ ITEMS = [
     item(
         "limit-kanto-bus",
         "upperLimit",
+        "route",
         "関東バス（都内均一）",
         "flat",
         src(
@@ -263,6 +252,7 @@ ITEMS = [
     item(
         "limit-tokyu-bus",
         "upperLimit",
+        "route",
         "東急バス（都内・横浜均一）",
         "flat",
         src(
@@ -275,6 +265,7 @@ ITEMS = [
     item(
         "limit-seibu-bus",
         "upperLimit",
+        "route",
         "西武バス（都内均一）",
         "flat",
         src(
@@ -287,6 +278,7 @@ ITEMS = [
     item(
         "limit-odakyu-bus",
         "upperLimit",
+        "route",
         "小田急バス（都内・横浜均一）",
         "flat",
         src(
@@ -299,6 +291,7 @@ ITEMS = [
     item(
         "limit-keio-bus",
         "upperLimit",
+        "route",
         "京王バス（都内〈京浜〉均一）",
         "flat",
         src(
@@ -311,6 +304,7 @@ ITEMS = [
     item(
         "limit-tobu-bus-central",
         "upperLimit",
+        "route",
         "東武バスセントラル（特別区均一）",
         "flat",
         src("関東運輸局 東武バスセントラル 乗合バス運賃の認可（2023-06-13）", f"{KANTO}/000297473.pdf"),
@@ -321,6 +315,7 @@ ITEMS = [
     item(
         "limit-keio-bus-tama",
         "upperLimit",
+        "route",
         "京王バス（多摩・対キロ区間制）",
         "distance",
         src(
@@ -335,6 +330,7 @@ ITEMS = [
     item(
         "limit-seibu-bus-tama",
         "upperLimit",
+        "route",
         "西武バス（多摩・対キロ区間制）",
         "distance",
         src(
@@ -349,6 +345,8 @@ ITEMS = [
 ]
 
 NOT_FOUND = [
+    "台東区「めぐりん」・墨田区「すみだ百景」（各100円）：出典ページの呼び方が「循環バス」で、コミュニティバスとは書かれていないため、種別を決められず、載せていません",
+    "武蔵野市「ムーバス」（100円）：出典ページにコミュニティバスとの記載がなく、種別を決められないため、載せていません",
     "東急バスの都内の運賃（2025年10月の改定後）",
     "三鷹市・調布市・日野市などのコミュニティバスの運賃（調べていません）",
     "羽田イノベーションシティの自動運転バスの運賃（公式資料に記載なし。運行は休止中）",

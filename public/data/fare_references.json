@@ -2,6 +2,8 @@
   "checkedAt": "2026-10-14",
   "notice": "運賃の参考データは、事業者・自治体・国土交通省（関東運輸局）の公式資料から確認できたものだけを載せています。「相場」は確認日時点で資料に載っていた実施運賃で、その後に改定されている場合があります。「上限運賃」は事業者ごとに認可された額で、実施運賃とは別です。実際の運賃は、運行事業者・自治体・協議会と調整して決めてください。",
   "notFound": [
+    "台東区「めぐりん」・墨田区「すみだ百景」（各100円）：出典ページの呼び方が「循環バス」で、コミュニティバスとは書かれていないため、種別を決められず、載せていません",
+    "武蔵野市「ムーバス」（100円）：出典ページにコミュニティバスとの記載がなく、種別を決められないため、載せていません",
     "東急バスの都内の運賃（2025年10月の改定後）",
     "三鷹市・調布市・日野市などのコミュニティバスの運賃（調べていません）",
     "羽田イノベーションシティの自動運転バスの運賃（公式資料に記載なし。運行は休止中）",
@@ -13,6 +15,7 @@
     {
       "id": "toei-23ku",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": [
         "13101",
@@ -55,6 +58,7 @@
     {
       "id": "kokusai-kogyo",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "国際興業バス（東京都内）",
@@ -72,6 +76,7 @@
     {
       "id": "kanto-bus",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "関東バス（都内均一）",
@@ -89,6 +94,7 @@
     {
       "id": "tokyu-bus",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "東急バス（都内・横浜均一）",
@@ -106,6 +112,7 @@
     {
       "id": "seibu-bus",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "西武バス（都内均一）",
@@ -123,6 +130,7 @@
     {
       "id": "odakyu-bus",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "小田急バス（都内・横浜均一）",
@@ -140,6 +148,7 @@
     {
       "id": "tobu-bus-central",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": [
         "13101",
@@ -181,6 +190,7 @@
     {
       "id": "keio-bus-23ku",
       "kind": "market",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": [
         "13101",
@@ -222,9 +232,32 @@
     {
       "id": "kita-kbus",
       "kind": "market",
+      "category": "community",
       "prefCode": "13",
       "cityCodes": [
-        "13117"
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
       ],
       "operator": "北区 K-バス",
       "fareType": "flat",
@@ -236,52 +269,38 @@
         "url": "https://www.city.kita.lg.jp/living/transport/1002525/1002526.html",
         "checkedAt": "2026-10-14",
         "quote": "料金100円（一律）"
-      }
-    },
-    {
-      "id": "taito-megurin",
-      "kind": "market",
-      "prefCode": "13",
-      "cityCodes": [
-        "13106"
-      ],
-      "operator": "台東区 めぐりん",
-      "fareType": "flat",
-      "flatFare": 100,
-      "baseFare": null,
-      "ratePerKm": null,
-      "source": {
-        "title": "台東区 めぐりん 運賃",
-        "url": "https://www.city.taito.lg.jp/kenchiku/kotsu/megurin/gaiyou/ryoukin/index.html",
-        "checkedAt": "2026-10-14"
       },
-      "note": "大人・小児とも100円。ページに更新日の記載なし"
-    },
-    {
-      "id": "sumida-hyakkei",
-      "kind": "market",
-      "prefCode": "13",
-      "cityCodes": [
-        "13107"
-      ],
-      "operator": "墨田区 すみだ百景",
-      "fareType": "flat",
-      "flatFare": 100,
-      "baseFare": null,
-      "ratePerKm": null,
-      "source": {
-        "title": "墨田区 すみだ百景 運賃",
-        "url": "https://www.city.sumida.lg.jp/kurashi/jyunkanbus/gaiyou/unchin.html",
-        "checkedAt": "2026-10-14"
-      },
-      "note": "大人（中学生以上）100円・小学生50円。基本運賃を200円に改定予定（令和9年度以降）"
+      "note": "北区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする"
     },
     {
       "id": "bunkyo-bgru",
       "kind": "market",
+      "category": "community",
       "prefCode": "13",
       "cityCodes": [
-        "13105"
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
       ],
       "operator": "文京区 B-ぐる",
       "fareType": "flat",
@@ -293,14 +312,38 @@
         "url": "https://www.city.bunkyo.lg.jp/b011/p001060.html",
         "checkedAt": "2026-10-14",
         "quote": "大人 こども 各100円"
-      }
+      },
+      "note": "文京区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする"
     },
     {
       "id": "minato-chiibus",
       "kind": "market",
+      "category": "community",
       "prefCode": "13",
       "cityCodes": [
-        "13103"
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
       ],
       "operator": "港区 ちぃばす",
       "fareType": "flat",
@@ -313,14 +356,37 @@
         "checkedAt": "2026-10-14",
         "quote": "路線を乗り継ぐ場合は、それぞれの路線で100円です。"
       },
-      "note": "小学生以上100円"
+      "note": "港区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする。小学生以上100円"
     },
     {
       "id": "shibuya-hachiko",
       "kind": "market",
+      "category": "community",
       "prefCode": "13",
       "cityCodes": [
-        "13113"
+        "13101",
+        "13102",
+        "13103",
+        "13104",
+        "13105",
+        "13106",
+        "13107",
+        "13108",
+        "13109",
+        "13110",
+        "13111",
+        "13112",
+        "13113",
+        "13114",
+        "13115",
+        "13116",
+        "13117",
+        "13118",
+        "13119",
+        "13120",
+        "13121",
+        "13122",
+        "13123"
       ],
       "operator": "渋谷区 ハチ公バス",
       "fareType": "flat",
@@ -332,34 +398,15 @@
         "url": "https://www.city.shibuya.tokyo.jp/kurashi/kotsu/hachiko/hachiko_about.html",
         "checkedAt": "2026-10-14",
         "quote": "大人・子供同額1乗車“ワンコイン”の100円"
-      }
-    },
-    {
-      "id": "musashino-mubus",
-      "kind": "market",
-      "prefCode": "13",
-      "cityCodes": [
-        "13203"
-      ],
-      "operator": "武蔵野市 ムーバス",
-      "fareType": "flat",
-      "flatFare": 100,
-      "baseFare": null,
-      "ratePerKm": null,
-      "source": {
-        "title": "武蔵野市 ムーバス 運賃",
-        "url": "https://www.city.musashino.lg.jp/kurashi_tetsuzuki/bus_churin_chusha_kotsuanzen/mubus/1005137.html",
-        "checkedAt": "2026-10-14",
-        "quote": "100円(未就学児は無料)"
-      }
+      },
+      "note": "渋谷区の運賃。区部のコミュニティバスの相場として、区部の全区で参考にする"
     },
     {
       "id": "keio-nishishinjuku-autonomous",
       "kind": "market",
+      "category": "autonomous",
       "prefCode": "13",
-      "cityCodes": [
-        "13104"
-      ],
+      "cityCodes": null,
       "operator": "京王バス 西新宿の自動運転バス（レベル2）",
       "fareType": "flat",
       "flatFare": 190,
@@ -370,11 +417,12 @@
         "url": "https://www.keio-bus.com/jidounten/",
         "checkedAt": "2026-10-14"
       },
-      "note": "大人190円（IC）・小児95円（IC）。ページに更新日の記載なし"
+      "note": "新宿区（西新宿）の事例。東京都内の自動運転バスの運賃の例として、都内全域で参考にする。大人190円（IC）・小児95円（IC）。ページに更新日の記載なし"
     },
     {
       "id": "limit-kokusai-kogyo",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "国際興業バス（東京都内・均一）",
@@ -392,6 +440,7 @@
     {
       "id": "limit-kanto-bus",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "関東バス（都内均一）",
@@ -409,6 +458,7 @@
     {
       "id": "limit-tokyu-bus",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "東急バス（都内・横浜均一）",
@@ -426,6 +476,7 @@
     {
       "id": "limit-seibu-bus",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "西武バス（都内均一）",
@@ -443,6 +494,7 @@
     {
       "id": "limit-odakyu-bus",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "小田急バス（都内・横浜均一）",
@@ -460,6 +512,7 @@
     {
       "id": "limit-keio-bus",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "京王バス（都内〈京浜〉均一）",
@@ -477,6 +530,7 @@
     {
       "id": "limit-tobu-bus-central",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": [
         "13101",
@@ -518,6 +572,7 @@
     {
       "id": "limit-keio-bus-tama",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "京王バス（多摩・対キロ区間制）",
@@ -536,6 +591,7 @@
     {
       "id": "limit-seibu-bus-tama",
       "kind": "upperLimit",
+      "category": "route",
       "prefCode": "13",
       "cityCodes": null,
       "operator": "西武バス（多摩・対キロ区間制）",

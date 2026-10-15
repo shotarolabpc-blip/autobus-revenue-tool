@@ -66,6 +66,10 @@ jobs:
         if: github.event_name == 'schedule' || github.event.inputs.target == 'roads' || github.event.inputs.target == 'all'
         run: python data_build/build_roads.py ${{ steps.prefs.outputs.prefs }}
 
+      - name: 祝日データ（内閣府が公表した年は「推定」を外す）
+        if: github.event_name == 'schedule' || github.event.inputs.target == 'all'
+        run: python data_build/build_holidays.py --refresh
+
       - name: 公開ルールの確認（1ファイル100MB未満）
         run: |
           big=$(find public/data -type f -size +99M)

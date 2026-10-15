@@ -3,9 +3,13 @@ import type { DefaultsFile, FareReferencesFile } from '../../data/schemas'
 import { positionDistancesKm, stopToStopKm } from '../../gis/route'
 import type { Fare, ProjectFile, Scenario } from '../../project/schema'
 import { useProjectStore } from '../../project/store'
-import { fareSettings, overridesByIndex } from '../../calc/fareInputs'
+import { fareSettings, fareSuggestionFor, overridesByIndex } from '../../calc/fareInputs'
 import { fmt } from '../../util/format'
-import { upperLimitWarnings } from '../../calc/fareSuggestion'
+import { fareWarnings, localDateIso } from '../../calc/fareSuggestion'
+import { downloadText } from '../../export/download'
+import { fareAssumptionsCsv } from '../../export/fareNotes'
+import { toIsoWithOffset } from '../../project/io'
+import { withBom } from '../../util/text'
 import { NumField, Stat } from '../fields'
 import { FareSuggestionCard } from './FareSuggestionCard'
 
@@ -25,6 +29,14 @@ export function FareSection({
   fareRefs: FareReferencesFile
 }) {
   const f = scenario.fare
+  // 運賃の目安は、運賃欄の警告・結果の画面・出力物と同じ共通の計算（calc/fareInputs.ts）を使う
+  const suggestion = fareSuggestionFor(project, scenario, fareRefs.items)
+  const todayIso = localDateIso(new Date())
+  const warnings = fareWarnings({
+    fare: f,
+    high: suggestion.high,
+    elasticity: scenario.coefficients.fareElasticity,
+  })
   const tax = defaults.items.consumptionTaxRate
   const setFare = (patch: Partial<Fare>) =>
     useProjectStore
@@ -141,7 +153,7 @@ export function FareSection({
             />
           </div>
         )}
-        {upperLimitWarnings(f, f.upperLimit).map((w) => (
+        {warnings.map((w) => (
           <p key={w} className="text-warning" role="alert">
             ⚠ {w}
           </p>
@@ -149,9 +161,29 @@ export function FareSection({
         <p className="hint">
           運賃は税込で入力します。税抜換算は {tax.source} による（税率 {tax.value * 100}%）。
         </p>
+        <button
+          type="button"
+          className="btn btn-small"
+          onClick={() => {
+            const now = new Date()
+            const csv = fareAssumptionsCsv(project, scenario, fareRefs.items, localDateIso(now), {
+              estimatedAt: toIsoWithOffset(now),
+              toolVersion: __APP_VERSION__,
+            })
+            downloadText(`${project.project.name}_運賃の前提条件.csv`, withBom(csv), 'text/csv')
+          }}
+        >
+          運賃の前提条件をCSVで保存（警告・出典つき）
+        </button>
       </div>
 
-      <FareSuggestionCard project={project} scenario={scenario} fareRefs={fareRefs} />
+      <FareSuggestionCard
+        project={project}
+        scenario={scenario}
+        fareRefs={fareRefs}
+        result={suggestion}
+        todayIso={todayIso}
+      />
 
       <div className="card">
         <h3>運賃表（F-4-5）</h3>

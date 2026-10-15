@@ -154,6 +154,8 @@ export type VehiclePresetsFile = z.infer<typeof vehiclePresetsFileSchema>
 export const fareReferenceSchema = z.object({
   id: z.string(),
   kind: z.enum(['market', 'upperLimit']),
+  /** 種別：route＝路線バス、community＝コミュニティバス、autonomous＝自動運転バス（F-4A-1） */
+  category: z.enum(['route', 'community', 'autonomous']),
   prefCode: z.string().regex(/^\d{2}$/),
   cityCodes: z.array(z.string().regex(/^\d{5}$/)).nullable(),
   operator: z.string(),

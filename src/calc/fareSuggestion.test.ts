@@ -10,6 +10,7 @@ import {
 const src = { title: 'テスト', url: 'https://example.com/', checkedAt: '2026-10-14' }
 const ref = (o: Partial<FareReference> & Pick<FareReference, 'id'>): FareReference => ({
   kind: 'market',
+  category: 'route',
   prefCode: '13',
   cityCodes: null,
   operator: o.id,
