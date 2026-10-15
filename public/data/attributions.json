@@ -95,6 +95,17 @@
       "licenseUrl": null,
       "dataVersion": null,
       "note": "定員・速度・航続距離などは参考値。実際の値はメーカー・運行事業者に確認すること。出典URLは車両プリセットの各項目に記載"
+    },
+    {
+      "id": "toei-balance",
+      "name": "東京都交通局 バス系統別収支状況（東京都オープンデータ「決算 参考」）",
+      "provider": "東京都交通局",
+      "url": "https://catalog.data.metro.tokyo.lg.jp/dataset/t000018d0000000011",
+      "license": "CC BY 4.0（表示）",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/deed.ja",
+      "dataVersion": "令和5年度",
+      "modified": true,
+      "note": "参考実績（都営バスの系統別の乗車人員・乗車料収入）。PDFの表を読み取って使用（千円/日 → 円/日に換算）"
     }
   ]
 }

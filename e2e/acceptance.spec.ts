@@ -236,3 +236,19 @@ test('東京都以外（神奈川県・横浜市）でも、同じ作りで推�
   const m = await page.getByRole('table', { name: '路線捕捉率' }).count()
   expect(m).toBe(1)
 })
+
+test('同梱の参考実績（都営バス）を検索して、比較に追加できる（F-5-5・F-5-6）', async ({ page }) => {
+  await createProject(page)
+  await resultsText(page)
+  const table = page.getByRole('table', { name: '同梱の参考実績' })
+  await expect(table).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('heading', { name: /同梱の参考実績（\d+件）/ })).toBeVisible()
+  await page.getByLabel('路線名・事業者で検索').fill('都０１')
+  await expect(table.getByRole('row')).toHaveCount(2) // 見出し＋1件
+  await expect(table).toContainText('渋谷駅前～新橋駅前')
+  await table.getByRole('button', { name: '比較に追加' }).click()
+  const compare = page.getByRole('table', { name: '推計と参考実績の比較' })
+  await expect(compare).toContainText('都０１')
+  // 平均運賃＝乗車料収入÷乗車人員（1,831千円÷10,159人 ≒ 180.2円）
+  await expect(compare).toContainText('180.2')
+})
