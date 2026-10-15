@@ -244,9 +244,9 @@ test('同梱の参考実績（都営バス）を検索して、比較に追加�
   await expect(table).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole('heading', { name: /同梱の参考実績（\d+件）/ })).toBeVisible()
   await page.getByLabel('路線名・事業者で検索').fill('都０１')
-  await expect(table.getByRole('row')).toHaveCount(4) // 見出し＋3年度分（令和5・6・7年度）
+  await expect(table.getByRole('row')).toHaveCount(2) // 見出し＋1件（令和5年度）
   await expect(table).toContainText('渋谷駅前～新橋駅前')
-  await table.getByRole('button', { name: '比較に追加' }).first().click() // 先頭は令和5年度
+  await table.getByRole('button', { name: '比較に追加' }).click()
   const compare = page.getByRole('table', { name: '推計と参考実績の比較' })
   await expect(compare).toContainText('都０１')
   // 平均運賃＝乗車料収入÷乗車人員（1,831千円÷10,159人 ≒ 180.2円）

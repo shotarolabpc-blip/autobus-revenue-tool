@@ -43,6 +43,8 @@ class Source:
     name: str
     url: str
     download_url: str | None = None  # プログラムで取得できる場合だけ
+    # 公開用のデータ（public/data）に入れてよいか。利用条件が確認できるまでは False（actuals_unpublished.csv に出す）
+    publish: bool = True
 
 
 SOURCES = [
@@ -54,18 +56,25 @@ SOURCES = [
         OPENDATA_PDF,
     ),
     # 令和6・7年度は、東京都オープンデータの窓口にまだなく、東京都交通局のサイト（プログラムからの取得は拒否される）で公開。
-    # 利用者がブラウザで取得して置いたPDFを使う（取得元のURLは利用者に教えてもらった）。TODO(根拠未確定)：利用条件を確認する
+    # 利用者がブラウザで取得して置いたPDFを使う（取得元のURLは利用者に教えてもらった）。
+    # 利用条件：交通局のサイトポリシー（https://www.kotsu.metro.tokyo.jp/riyo/）では、掲載情報は著作権の対象で、
+    # 私的使用の複製や引用など著作権法上認められた場合を除き、無断で複製・転用できないとされている。
+    # オープンデータ（CC BY 4.0）として公開されている令和5年度と違い、公開してよいかが確認できていないため、
+    # 公開用のデータには入れない（publish=False）。交通局に確認できたら True にする。
+    # 令和7年度は決算の速報（監査委員の審査・都議会の認定の前）。
     Source(
         "r06_closing05.pdf",
         2024,
         "東京都交通局 令和6年度 バス系統別収支状況（東京都交通局の決算の公表ページに掲載）",
         PDF_BASE + "r06_closing05.pdf",
+        publish=False,
     ),
     Source(
         "r07_closing05.pdf",
         2025,
         "東京都交通局 令和7年度 バス系統別収支状況（東京都交通局の決算の公表ページに掲載）",
         PDF_BASE + "r07_closing05.pdf",
+        publish=False,
     ),
 ]
 
@@ -146,6 +155,7 @@ def check_year(lines: list[str], year: int) -> str | None:
 def main() -> None:
     setup_console()
     out_rows: list[list] = []
+    held_rows: list[list] = []  # 公開しない年度の行（手元の確認用）
     for src in SOURCES:
         path = REF_DIR / src.file
         if not path.exists():
@@ -163,7 +173,7 @@ def main() -> None:
             raise SystemExit(f"{src.file}：検算が合わないため、CSVを作りません:\n  {detail}")
         print(f"  {src.file}：{src.year}年度 {len(rows)} 系統（検算OK）")
         for r in rows:
-            out_rows.append(
+            (out_rows if src.publish else held_rows).append(
                 [
                     f"{r['code']} {r['section']}",
                     "東京都交通局（都営バス）",
@@ -183,7 +193,13 @@ def main() -> None:
         w = csv.writer(f)
         w.writerow(COLUMNS)
         w.writerows(out_rows)
-    print(f"{OUT.relative_to(DATA_RAW.parent)}：{len(out_rows)} 行")
+    print(f"{OUT.relative_to(DATA_RAW.parent)}：{len(out_rows)} 行（公開用）")
+    held = OUT.with_name("actuals_unpublished.csv")
+    with open(held, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(COLUMNS)
+        w.writerows(held_rows)
+    print(f"{held.relative_to(DATA_RAW.parent)}：{len(held_rows)} 行（利用条件の確認待ちのため、公開しない）")
 
 
 if __name__ == "__main__":
